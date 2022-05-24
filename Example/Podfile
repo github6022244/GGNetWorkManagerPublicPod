@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '9.0'
+
+target 'GGNetWorkManagerPublic_Example' do
+  pod 'GGNetWorkManagerPublic', :path => '../'
+
+  target 'GGNetWorkManagerPublic_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
