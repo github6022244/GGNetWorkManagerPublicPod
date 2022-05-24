@@ -1,0 +1,6 @@
+framework module Pods_GGNetWorkManagerPublic_Tests {
+  umbrella header "Pods-GGNetWorkManagerPublic_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}

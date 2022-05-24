@@ -1,18 +1,20 @@
 //
 //  GGAppDelegate.m
-//  GGNetWorkManagerPublic
+//  GGNetWorkManager
 //
-//  Created by 1563084860@qq.com on 05/24/2022.
-//  Copyright (c) 2022 1563084860@qq.com. All rights reserved.
+//  Created by Weigh156 on 05/19/2022.
+//  Copyright (c) 2022 Weigh156. All rights reserved.
 //
 
 #import "GGAppDelegate.h"
+#import <GGNetWorkManager.h>
+#import "GGNetWorkConfigModel.h"
 
 @implementation GGAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
+    [self configNetWork];
     return YES;
 }
 
@@ -41,6 +43,12 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+#pragma mark ------------------------- Private -------------------------
+- (void)configNetWork {
+    [GGNetWorkManager setUpConfigModel:[GGNetWorkConfigModel new]];
+//    [GGNetWorkManager share].debugLogEnable = YES;
 }
 
 @end

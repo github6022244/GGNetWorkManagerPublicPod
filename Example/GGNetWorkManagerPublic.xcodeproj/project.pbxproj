@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1DABBB143F2EB9E3F04091E7 /* Pods_GGNetWorkManagerPublic_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2E89CFDB52832376024832F /* Pods_GGNetWorkManagerPublic_Example.framework */; };
+		53ED6698283CD6A6000EE6D6 /* GGNetWorkConfigModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 53ED6696283CD6A6000EE6D6 /* GGNetWorkConfigModel.m */; };
+		53ED669B283CD6B2000EE6D6 /* GGTestRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 53ED6699283CD6B2000EE6D6 /* GGTestRequest.m */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -38,9 +40,13 @@
 
 /* Begin PBXFileReference section */
 		02C82E70F28FF3FF7342F8BF /* Pods-GGNetWorkManagerPublic_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GGNetWorkManagerPublic_Example.release.xcconfig"; path = "Target Support Files/Pods-GGNetWorkManagerPublic_Example/Pods-GGNetWorkManagerPublic_Example.release.xcconfig"; sourceTree = "<group>"; };
-		1ECB19BB29C20F993CA9C7F2 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		1ECB19BB29C20F993CA9C7F2 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		53ED6696283CD6A6000EE6D6 /* GGNetWorkConfigModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GGNetWorkConfigModel.m; sourceTree = "<group>"; };
+		53ED6697283CD6A6000EE6D6 /* GGNetWorkConfigModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GGNetWorkConfigModel.h; sourceTree = "<group>"; };
+		53ED6699283CD6B2000EE6D6 /* GGTestRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GGTestRequest.m; sourceTree = "<group>"; };
+		53ED669A283CD6B2000EE6D6 /* GGTestRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GGTestRequest.h; sourceTree = "<group>"; };
 		5B348C2EDC46FC4B1DC89F46 /* Pods-GGNetWorkManagerPublic_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GGNetWorkManagerPublic_Example.debug.xcconfig"; path = "Target Support Files/Pods-GGNetWorkManagerPublic_Example/Pods-GGNetWorkManagerPublic_Example.debug.xcconfig"; sourceTree = "<group>"; };
-		5D9C7D0905EA1BEF825E127D /* GGNetWorkManagerPublic.podspec */ = {isa = PBXFileReference; includeInIndex = 1; name = GGNetWorkManagerPublic.podspec; path = ../GGNetWorkManagerPublic.podspec; sourceTree = "<group>"; };
+		5D9C7D0905EA1BEF825E127D /* GGNetWorkManagerPublic.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = GGNetWorkManagerPublic.podspec; path = ../GGNetWorkManagerPublic.podspec; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* GGNetWorkManagerPublic_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GGNetWorkManagerPublic_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6003F58F195388D20070C39A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -64,7 +70,7 @@
 		873B8AEA1B1F5CCA007FD442 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		8ABF0EA45E16DB628BA68BD3 /* Pods-GGNetWorkManagerPublic_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GGNetWorkManagerPublic_Tests.release.xcconfig"; path = "Target Support Files/Pods-GGNetWorkManagerPublic_Tests/Pods-GGNetWorkManagerPublic_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		B6FACCAEC29AE7E465D3BB9D /* Pods-GGNetWorkManagerPublic_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GGNetWorkManagerPublic_Tests.debug.xcconfig"; path = "Target Support Files/Pods-GGNetWorkManagerPublic_Tests/Pods-GGNetWorkManagerPublic_Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		CFC7CAC7025D8F8B3EE0CED5 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		CFC7CAC7025D8F8B3EE0CED5 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		E1424BC1864E8FF2CEB654EB /* Pods_GGNetWorkManagerPublic_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GGNetWorkManagerPublic_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2E89CFDB52832376024832F /* Pods_GGNetWorkManagerPublic_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GGNetWorkManagerPublic_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -132,6 +138,10 @@
 		6003F593195388D20070C39A /* Example for GGNetWorkManagerPublic */ = {
 			isa = PBXGroup;
 			children = (
+				53ED669A283CD6B2000EE6D6 /* GGTestRequest.h */,
+				53ED6699283CD6B2000EE6D6 /* GGTestRequest.m */,
+				53ED6697283CD6A6000EE6D6 /* GGNetWorkConfigModel.h */,
+				53ED6696283CD6A6000EE6D6 /* GGNetWorkConfigModel.m */,
 				6003F59C195388D20070C39A /* GGAppDelegate.h */,
 				6003F59D195388D20070C39A /* GGAppDelegate.m */,
 				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
@@ -193,7 +203,6 @@
 				B6FACCAEC29AE7E465D3BB9D /* Pods-GGNetWorkManagerPublic_Tests.debug.xcconfig */,
 				8ABF0EA45E16DB628BA68BD3 /* Pods-GGNetWorkManagerPublic_Tests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -248,6 +257,9 @@
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "1563084860@qq.com";
 				TargetAttributes = {
+					6003F589195388D20070C39A = {
+						DevelopmentTeam = G738ZT7H2Q;
+					};
 					6003F5AD195388D20070C39A = {
 						TestTargetID = 6003F589195388D20070C39A;
 					};
@@ -258,6 +270,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -346,11 +359,17 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GGNetWorkManagerPublic_Example/Pods-GGNetWorkManagerPublic_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/AFNetworking/AFNetworking.framework",
 				"${BUILT_PRODUCTS_DIR}/GGNetWorkManagerPublic/GGNetWorkManagerPublic.framework",
+				"${BUILT_PRODUCTS_DIR}/QMUIKit/QMUIKit.framework",
+				"${BUILT_PRODUCTS_DIR}/YTKNetwork/YTKNetwork.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AFNetworking.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GGNetWorkManagerPublic.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/QMUIKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YTKNetwork.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -364,6 +383,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				53ED669B283CD6B2000EE6D6 /* GGTestRequest.m in Sources */,
+				53ED6698283CD6A6000EE6D6 /* GGNetWorkConfigModel.m in Sources */,
 				6003F59E195388D20070C39A /* GGAppDelegate.m in Sources */,
 				6003F5A7195388D20070C39A /* GGViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
@@ -494,6 +515,7 @@
 			baseConfigurationReference = 5B348C2EDC46FC4B1DC89F46 /* Pods-GGNetWorkManagerPublic_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = G738ZT7H2Q;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GGNetWorkManagerPublic/GGNetWorkManagerPublic-Prefix.pch";
 				INFOPLIST_FILE = "GGNetWorkManagerPublic/GGNetWorkManagerPublic-Info.plist";
@@ -510,6 +532,7 @@
 			baseConfigurationReference = 02C82E70F28FF3FF7342F8BF /* Pods-GGNetWorkManagerPublic_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = G738ZT7H2Q;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GGNetWorkManagerPublic/GGNetWorkManagerPublic-Prefix.pch";
 				INFOPLIST_FILE = "GGNetWorkManagerPublic/GGNetWorkManagerPublic-Info.plist";

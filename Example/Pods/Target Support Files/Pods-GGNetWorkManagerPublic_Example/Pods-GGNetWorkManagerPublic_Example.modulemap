@@ -1,0 +1,6 @@
+framework module Pods_GGNetWorkManagerPublic_Example {
+  umbrella header "Pods-GGNetWorkManagerPublic_Example-umbrella.h"
+
+  export *
+  module * { export * }
+}

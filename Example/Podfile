@@ -1,9 +1,12 @@
+source 'https://github.com/CocoaPods/Specs.git'
 use_frameworks!
 
 platform :ios, '9.0'
 
 target 'GGNetWorkManagerPublic_Example' do
   pod 'GGNetWorkManagerPublic', :path => '../'
+
+  pod 'QMUIKit'
 
   target 'GGNetWorkManagerPublic_Tests' do
     inherit! :search_paths
