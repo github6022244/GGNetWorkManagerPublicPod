@@ -64,7 +64,6 @@
     // TODO: hide loading
     if (self.loadingHUD) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            NSLog(@" loading finished");
             [self.loadingHUD gg_configHideLoading];
         });
     }

@@ -77,7 +77,7 @@
 - (void)configYTKNetwork {
     [YTKNetworkConfig sharedConfig].baseUrl = GGNetWorkManagerShareInstance.currentServerURL;
     [YTKNetworkConfig sharedConfig].cdnUrl = GGNetWorkManagerShareInstance.currentCDNURL;
-    [YTKNetworkConfig sharedConfig].debugLogEnabled = GGNetWorkManagerShareInstance.isTesting;
+    [YTKNetworkConfig sharedConfig].debugLogEnabled = GGNetWorkManagerShareInstance.debugLogEnable;
 
     MRUrlArgumentsFilter *urlFilter = [MRUrlArgumentsFilter filterWithArguments:self.commenParameters];
     [[YTKNetworkConfig sharedConfig] addUrlFilter:urlFilter];
@@ -95,7 +95,9 @@
 #pragma mark ------------------------- Interface -------------------------
 // 初始化配置，传入自定义的 model
 + (void)setUpConfigModel:(id<GGNetWorkManagerConfigProtocol>)configModel {
-    GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
+    if (GGNetWorkManagerShareInstance.debugLogEnable) {
+        GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
+    }
     
     GGNetWorkManagerShareInstance.configModel = configModel;
     
@@ -194,6 +196,12 @@
 #pragma mark ------------------------- set / get -------------------------
 - (BOOL)isTesting {
     return GGNetWorkManagerShareInstance.currentSeverType != GGNetManagerServerType_Public;
+}
+
+- (void)setDebugLogEnable:(BOOL)debugLogEnable {
+    _debugLogEnable = debugLogEnable;
+    
+    [YTKNetworkConfig sharedConfig].debugLogEnabled = debugLogEnable;
 }
 
 @end
