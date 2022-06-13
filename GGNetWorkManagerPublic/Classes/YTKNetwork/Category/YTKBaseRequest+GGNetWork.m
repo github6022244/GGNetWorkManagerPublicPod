@@ -33,6 +33,4 @@
     [self gg_requestFailedFilter];
 }
 
-
-
 @end

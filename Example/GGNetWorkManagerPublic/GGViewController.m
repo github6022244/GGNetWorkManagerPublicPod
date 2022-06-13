@@ -10,6 +10,7 @@
 #import <GGNetWork.h>
 #import "GGTestRequest.h"
 #import <QMUIKit.h>
+#import "GGCachesRequest.h"
 
 @interface GGViewController ()<YTKChainRequestDelegate>
 
@@ -20,6 +21,8 @@
 @property (nonatomic, strong) YTKChainRequest *chainRequest;
 
 @property (nonatomic, strong) YTKBatchRequest *batchRequest;
+
+@property (nonatomic, strong) GGCachesRequest *cacheRequest;
 
 @end
 
@@ -46,21 +49,22 @@
 }
 
 - (void)setUpUI {
-    _gridView = [[QMUIGridView alloc] initWithColumn:1 rowHeight:100.f];
-    [self.view addSubview:_gridView];
-    _gridView.separatorDashed = YES;
-    _gridView.separatorColor = UIColorGray;
-    _gridView.separatorWidth = 0.9f;
-    _gridView.frame = CGRectSetSize(CGRectZero, CGSizeMake(200.f, 300.f));
-    _gridView.center = self.view.center;
-    
     NSArray *array = @[
         @"单个请求",
         @"多个请求串行",
         @"多个请求并行",
+        @"缓存请求",
     ];
     
-    for (NSInteger i = 0; i < 3; i++) {
+    _gridView = [[QMUIGridView alloc] initWithColumn:1 rowHeight:50.f];
+    [self.view addSubview:_gridView];
+    _gridView.separatorDashed = YES;
+    _gridView.separatorColor = UIColorGray;
+    _gridView.separatorWidth = 0.9f;
+    _gridView.frame = CGRectSetSize(CGRectZero, CGSizeMake(200.f, 50.f * array.count));
+    _gridView.center = self.view.center;
+    
+    for (NSInteger i = 0; i < array.count; i++) {
         QMUIFillButton *btn = [QMUIFillButton buttonWithType:UIButtonTypeCustom];
         [_gridView addSubview:btn];
         btn.fillColor = [UIColor qmui_randomColor];
@@ -172,6 +176,32 @@
     [batchReq start];
 }
 
+- (void)test_Req3 {
+    self.cacheRequest.ignoreCache = NO;
+    
+    NSError *error = [NSError new];
+    BOOL loadCaches = [self.cacheRequest loadCacheWithError:&error];
+    if (loadCaches) {
+        [QMUITips showInfo:@"有缓存信息"];
+        
+        QMUILog(nil, @"缓存信息: \n%@", self.cacheRequest.responseJSONObject);
+        
+        return;
+    } else {
+        QMUILog(nil, @"%@", error.localizedDescription);
+    }
+    
+    self.cacheRequest.successCompletionBlock = ^(__kindof YTKRequest * _Nonnull request) {
+        [QMUITips showSucceed:@"请求成功"];
+    };
+    
+    self.cacheRequest.failureCompletionBlock = ^(__kindof YTKRequest * _Nonnull request) {
+        [QMUITips showError:@"请求失败"];
+    };
+    
+    [self.cacheRequest start];
+}
+
 #pragma mark ------------------------- Delegate -------------------------
 - (void)chainRequestFinished:(YTKChainRequest *)chainRequest {
     QMUILog(nil, @"请求完成 : ChainRequest");
@@ -179,6 +209,15 @@
 
 - (void)chainRequestFailed:(YTKChainRequest *)chainRequest failedBaseRequest:(YTKBaseRequest *)request {
     QMUILog(nil, @"\n请求失败 : ChainRequest - request tag : %ld \n%@\n", (long)request.tag, request.error.localizedDescription);
+}
+
+#pragma mark ------------------------- set / get -------------------------
+- (GGCachesRequest *)cacheRequest {
+    if (!_cacheRequest) {
+        _cacheRequest = [GGCachesRequest new];
+    }
+    
+    return _cacheRequest;
 }
 
 @end

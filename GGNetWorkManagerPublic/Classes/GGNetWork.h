@@ -3,7 +3,7 @@
 //  GGNetWorkManager
 //
 //  Created by GG on 2022/5/17.
-//  Version: 0.1.1
+//  Version: 0.1.4
 
 
 #import "GGNetWorkManager.h"
@@ -13,3 +13,5 @@
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
+#import "YTKRequest+GGNetWork.h"
+#import "GGNetWorkManagerYTKRequestProtocol.h"
