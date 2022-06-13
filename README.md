@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # GGNetWorkManagerPublic
 
 [![CI Status](https://img.shields.io/travis/1563084860@qq.com/GGNetWorkManagerPublic.svg?style=flat)](https://travis-ci.org/1563084860@qq.com/GGNetWorkManagerPublic)
@@ -27,3 +28,8 @@ pod 'GGNetWorkManagerPublic'
 ## License
 
 GGNetWorkManagerPublic is available under the MIT license. See the LICENSE file for more info.
+=======
+# GGNetWorkManagerPublicPod
+iOS 网络管理器 GGNetWorkManager公有库
+>>>>>>> 3bb28ec845b95edae45a120836646eb80cd7673e
+
