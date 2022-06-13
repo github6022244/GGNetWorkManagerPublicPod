@@ -59,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param urlType url 类型
 + (NSString *)getCurrentURLWithUrlType:(GGNetManagerURLType)urlType;
 
+/// 清除网络请求缓存
++ (void)clearNetRequestCaches;
+
 @end
 
 NS_ASSUME_NONNULL_END

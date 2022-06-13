@@ -7,6 +7,7 @@
 
 #import "GGNetWorkManager.h"
 #import <YTKNetwork/YTKNetworkConfig.h>
+#import <YTKNetwork/YTKRequest.h>
 #import "MRUrlArgumentsFilter.h"
 #import "MRCacheDirPathFilter.h"
 #import "YTKChainRequest+AnimatingAccessory.h"
@@ -141,6 +142,15 @@
     }
 }
 
+#pragma mark --- 清除网络请求缓存
++ (void)clearNetRequestCaches {
+    YTKRequest *request = [YTKRequest new];
+    if ([request respondsToSelector:NSSelectorFromString(@"cacheBasePath")]) {
+        NSString *libraryCachePath = [request performSelector:NSSelectorFromString(@"cacheBasePath")];
+        [self _clearCacheWithFilePath:libraryCachePath];
+    }
+}
+
 #pragma mark ------------------------- Private -------------------------
 - (NSString *)_getCurrentServerURL {
     switch (self.currentSeverType) {
@@ -191,6 +201,25 @@
         }
             break;
     }
+}
+
+//清除path文件夹下缓存
++ (BOOL)_clearCacheWithFilePath:(NSString *)path {
+    //拿到path路径的下一级目录的子文件夹
+    NSArray *subPathArr = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:nil];
+    NSString *filePath = nil;
+    NSError *error = nil;
+    for (NSString *subPath in subPathArr) {
+        filePath = [path stringByAppendingPathComponent:subPath];
+        //删除子文件夹
+        [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
+        if (error) {
+            return NO;
+        }
+        
+    }
+    
+    return YES;
 }
 
 #pragma mark ------------------------- set / get -------------------------

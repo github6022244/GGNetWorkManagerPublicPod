@@ -68,4 +68,19 @@
 //    NSLog(@"%@", [GGNetWorkHelper getStringToLogRequest:self forRequestFail:YES appendString:nil]);
 }
 
+/// 如果缓存验证不通过，是否自动删除缓存文件
+- (BOOL)autoClearCachesIfNotValidate {
+    return YES;
+}
+
+/// 是否使用公共参数（默认YES）
+- (BOOL)useCommenParameters {
+    return YES;
+}
+
+/// 是否使用公共Header（默认YES）
+- (BOOL)useCommenHeader {
+    return YES;
+}
+
 @end

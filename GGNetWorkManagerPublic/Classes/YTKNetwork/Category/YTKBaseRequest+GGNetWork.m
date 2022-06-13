@@ -9,6 +9,8 @@
 #import <objc/runtime.h>
 #import "GGNetWorkManager.h"
 #import "GGNetWorkHelper.h"
+#import "GGNetWorkManagerDefine.h"
+#import "GGNetWorkManagerYTKRequestProtocol.h"
 
 @implementation YTKBaseRequest (GGNetWork)
 
@@ -16,11 +18,14 @@
 #ifdef DEBUG
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        Method oriMethod_1 = class_getInstanceMethod([self class], @selector(requestFailedFilter));
-        Method newMethod_1 = class_getInstanceMethod([self class], @selector(gg_requestFailedFilter));
-        method_exchangeImplementations(oriMethod_1, newMethod_1);
+        GGNetWorkExchangeImplementations([self class], @selector(requestFailedFilter), @selector(gg_requestFailedFilter));
     });
 #endif
+    
+    static dispatch_once_t onceToken1;
+    dispatch_once(&onceToken1, ^{
+        GGNetWorkExchangeImplementations([self class], @selector(requestArgument), @selector(gg_requestArgument));
+    });
 }
 
 #pragma mark --- 统一处理失败回调
@@ -31,6 +36,28 @@
     }
     
     [self gg_requestFailedFilter];
+}
+
+#pragma mark --- 添加公共参数
+- (id)gg_requestArgument {
+    NSDictionary *argument = [self gg_requestArgument];
+    
+    // 添加公共参数
+    BOOL useCommenParameters = YES;
+    
+    if ([self respondsToSelector:@selector(useCommenParameters)]) {
+        useCommenParameters = [self performSelector:@selector(useCommenParameters)];
+    }
+    
+    if (useCommenParameters) {
+        NSMutableDictionary *commenParam = [GGNetWorkManager share].commenParameters.mutableCopy;
+        
+        [commenParam addEntriesFromDictionary:argument];
+        
+        argument = commenParam;
+    }
+    
+    return argument;
 }
 
 @end

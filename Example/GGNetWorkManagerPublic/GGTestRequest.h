@@ -6,10 +6,11 @@
 //
 
 #import <YTKNetwork/YTKNetwork.h>
+#import <GGNetWork.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface GGTestRequest : YTKRequest
+@interface GGTestRequest : YTKRequest<GGNetWorkManagerYTKRequestProtocol>
 
 @end
 
