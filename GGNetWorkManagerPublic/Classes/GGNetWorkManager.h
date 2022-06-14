@@ -62,6 +62,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// 清除网络请求缓存
 + (void)clearNetRequestCaches;
 
+/// 获取网络缓存大小
++ (CGFloat)getNetRequestCachesSize;
+
+/// 获取网络缓存文件路径
++ (NSString *)getNetRequestCachesFilePath;
+
 @end
 
 NS_ASSUME_NONNULL_END
