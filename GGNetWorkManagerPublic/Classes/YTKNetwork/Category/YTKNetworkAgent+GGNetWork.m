@@ -16,7 +16,6 @@
 @implementation YTKNetworkAgent (GGNetWork)
 
 + (void)load {
-#ifdef DEBUG
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         GGNetWorkExchangeImplementations([self class], @selector(init), @selector(gg_init));
@@ -28,7 +27,6 @@
         GGNetWorkExchangeImplementations([self class], @selector(requestSerializerForRequest:), @selector(gg_requestSerializerForRequest:));
 #pragma clang diagnostic pop
     });
-#endif
 }
 
 #pragma mark --- 重写init，配置 AFHTTPSessionManager
