@@ -20,12 +20,14 @@
     dispatch_once(&onceToken, ^{
         GGNetWorkExchangeImplementations([self class], @selector(init), @selector(gg_init));
         
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wundeclared-selector"
+GGNetWorkPushIgnoreUndeclaredSelectorWarning
+        
+#ifdef DEBUG
         GGNetWorkExchangeImplementations([self class], @selector(sessionTaskForRequest:error:), @selector(gg_sessionTaskForRequest:error:));
+#endif
 
         GGNetWorkExchangeImplementations([self class], @selector(requestSerializerForRequest:), @selector(gg_requestSerializerForRequest:));
-#pragma clang diagnostic pop
+GGNetWorkPopClangDiagnosticWarnings
     });
 }
 

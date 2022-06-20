@@ -55,7 +55,7 @@
         @"多个请求并行",
         @"缓存请求",
     ];
-    
+    BeginIgnoreDeprecatedWarning
     _gridView = [[QMUIGridView alloc] initWithColumn:1 rowHeight:50.f];
     [self.view addSubview:_gridView];
     _gridView.separatorDashed = YES;

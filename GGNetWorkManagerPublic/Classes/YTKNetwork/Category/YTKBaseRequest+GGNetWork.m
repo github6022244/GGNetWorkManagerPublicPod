@@ -31,9 +31,7 @@
 #pragma mark --- 统一处理失败回调
 ///  Called on the main thread when request failed.
 - (void)gg_requestFailedFilter {
-    if ([GGNetWorkManager share].debugLogEnable) {
-        GGNetWorkLog(@"%@", [GGNetWorkHelper getStringToLogRequest:self forRequestFail:YES appendString:nil]);
-    }
+    GGNetWorkLog(@"%@", [GGNetWorkHelper getStringToLogRequest:self forRequestFail:YES appendString:nil]);
     
     [self gg_requestFailedFilter];
 }

@@ -6,6 +6,7 @@
 //
 
 #import "GGNetWorkManager.h"
+#import "GGNetWorkManagerDefine.h"
 #import <YTKNetwork/YTKNetworkConfig.h>
 #import <YTKNetwork/YTKRequest.h>
 #import "MRUrlArgumentsFilter.h"
@@ -13,8 +14,6 @@
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
-
-#define GGNetWorkManagerDebugServerTypeUserDefaultsKey @"GGNetWorkManagerDebugServerTypeUserDefaultsKey"
 
 #define GGNetWorkManagerShareInstance [GGNetWorkManager share]
 
@@ -46,12 +45,16 @@
 
 #pragma mark ------------------------- Cycle -------------------------
 + (instancetype)share {
-    static GGNetWorkManager *manager;
     static dispatch_once_t onceToken;
+    static GGNetWorkManager *instance = nil;
     dispatch_once(&onceToken, ^{
-        manager = [[GGNetWorkManager alloc] init];
+        instance = [[super allocWithZone:NULL] init];
     });
-    return manager;
+    return instance;
+}
+
++ (id)allocWithZone:(struct _NSZone *)zone {
+    return [self share];
 }
 
 #pragma mark ------------------------- Cofnig -------------------------
@@ -82,8 +85,10 @@
 
     MRUrlArgumentsFilter *urlFilter = [MRUrlArgumentsFilter filterWithArguments:self.commenParameters];
     [[YTKNetworkConfig sharedConfig] addUrlFilter:urlFilter];
+    
     MRCacheDirPathFilter *cacheDirPathFilter = [[MRCacheDirPathFilter alloc] init];
     [[YTKNetworkConfig sharedConfig] addCacheDirPathFilter:cacheDirPathFilter];
+    
     /// 证书配置
     AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
    // 如果需要验证自建证书(无效证书)，需要设置为YES，默认为NO;
@@ -96,9 +101,7 @@
 #pragma mark ------------------------- Interface -------------------------
 // 初始化配置，传入自定义的 model
 + (void)setUpConfigModel:(id<GGNetWorkManagerConfigProtocol>)configModel {
-    if (GGNetWorkManagerShareInstance.debugLogEnable) {
-        GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
-    }
+    GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
     
     GGNetWorkManagerShareInstance.configModel = configModel;
     
@@ -155,8 +158,10 @@
 #pragma mark --- 获取网络缓存文件路径
 + (NSString *)getNetRequestCachesFilePath {
     YTKRequest *request = [YTKRequest new];
-    if ([request respondsToSelector:NSSelectorFromString(@"cacheBasePath")]) {
-        NSString *libraryCachePath = [request performSelector:NSSelectorFromString(@"cacheBasePath")];
+GGNetWorkPushIgnoreUndeclaredSelectorWarning
+    if ([request respondsToSelector:@selector(cacheBasePath)]) {
+        NSString *libraryCachePath = [request performSelector:@selector(cacheBasePath)];
+GGNetWorkPopClangDiagnosticWarnings
         return libraryCachePath;
     }
     
@@ -257,7 +262,6 @@
         
         //忽略不需要计算的文件:文件夹不存在/ 过滤文件夹/隐藏文件
         if (!isExist || isDirectory || [filePath containsString:@".DS"]) {
-            
             continue;
         }
         

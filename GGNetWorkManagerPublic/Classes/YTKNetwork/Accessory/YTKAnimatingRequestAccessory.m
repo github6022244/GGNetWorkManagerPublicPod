@@ -8,10 +8,10 @@
 
 #import "YTKAnimatingRequestAccessory.h"
 #import "GGNetWorkManager.h"
-//#import "YTKAlertUtils.h"
+#import "GGNetWorkHelper.h"
 
 /// 默认的 parentView
-#define YTKAnimatingDefaultTipsParentView (UIApplication.sharedApplication.delegate.window)
+#define YTKAnimatingDefaultTipsParentView [GGNetWorkHelper getKeyWindow]
 
 @interface YTKAnimatingRequestAccessory ()
 
