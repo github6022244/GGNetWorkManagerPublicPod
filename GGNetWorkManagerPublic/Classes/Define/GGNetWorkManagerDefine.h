@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, GGNetManagerURLType) {
 /// 交换同一个 class 里的 originSelector 和 newSelector 的实现，如果原本不存在 originSelector，则相当于给 class 新增一个叫做 originSelector 的方法
 CG_INLINE void
 GGNetWorkExchangeImplementations(Class _class, SEL org_Selector, SEL new_Selector) {
-    if (!_class || !org_Selector || new_Selector) {
+    if (!_class || !org_Selector || !new_Selector) {
         return;
     }
     

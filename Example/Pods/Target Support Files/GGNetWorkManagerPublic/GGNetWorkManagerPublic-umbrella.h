@@ -29,6 +29,7 @@
 #import "GGNetWorkManagerConfigProtocol.h"
 #import "GGNetWorkManagerDefine.h"
 #import "GGNetWorkManagerLoadingProtocol.h"
+#import "GGNetWorkHelper.h"
 #import "YTKAnimatingRequestAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"

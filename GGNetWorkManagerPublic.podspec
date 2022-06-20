@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'GGNetWorkManagerPublic'
-  s.version          = '0.1.8'
+  s.version          = '0.1.9'
   s.summary          = 'iOS 网络管理器 GGNetWorkManager公有库'
 
 # This description is used to generate tags and improve search results.
@@ -38,6 +38,7 @@ TODO: Add long description of the pod here.
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
+  
   s.dependency 'AFNetworking', '~> 4.0.1'
   s.dependency 'YTKNetwork', '~> 3.0.6'
   
@@ -46,11 +47,31 @@ TODO: Add long description of the pod here.
   end
       
   s.subspec 'Help' do |hh|
-      hh.source_files = 'GGNetWorkManagerPublic/Classes/Help/**/*'
+      
+      hh.subspec 'GGNetWorkHelper' do |hhh|
+          hhh.source_files = 'GGNetWorkManagerPublic/Classes/Help/GGNetWorkHelper/**'
+      end
+      
   end
   
   s.subspec 'YTKNetwork' do |yy|
-      yy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/**/*'
+      
+      yy.subspec 'Accessory' do |yyy|
+          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Accessory/**'
+      end
+      
+      yy.subspec 'Category' do |yyy|
+          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Category/**'
+      end
+      
+      yy.subspec 'Filter' do |yyy|
+          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Filter/**'
+      end
+      
+      yy.subspec 'Protocol' do |yyy|
+          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Protocol/**'
+      end
+      
   end
   
 end

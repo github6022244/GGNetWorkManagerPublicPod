@@ -3,7 +3,7 @@
 //  GGNetWorkManager
 //
 //  Created by GG on 2022/5/17.
-//  Version: 0.1.8
+//  Version: 0.1.9
 
 
 #import "GGNetWorkManager.h"

@@ -35,7 +35,10 @@
 
 // 配置 AFHTTPSessionManager
 - (void)gg_configAFHTTPSessionManager:(AFHTTPSessionManager * _Nullable)manager {
+    NSSet *set = [NSSet setWithSet:manager.responseSerializer.acceptableContentTypes];
+    [set setByAddingObject:@"text/html"];
     
+    manager.responseSerializer.acceptableContentTypes = set;
 }
 
 // 设置请求模式
