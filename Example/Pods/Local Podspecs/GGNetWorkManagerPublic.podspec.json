@@ -1,6 +1,6 @@
 {
   "name": "GGNetWorkManagerPublic",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "summary": "iOS 网络管理器 GGNetWorkManager公有库",
   "description": "TODO: Add long description of the pod here.",
   "homepage": "https://github.com/github6022244/GGNetWorkManagerPublicPod",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/github6022244/GGNetWorkManagerPublicPod.git",
-    "tag": "0.1.9"
+    "tag": "0.1.10"
   },
   "platforms": {
     "ios": "9.0"
@@ -26,41 +26,5 @@
     "YTKNetwork": [
       "~> 3.0.6"
     ]
-  },
-  "subspecs": [
-    {
-      "name": "Define",
-      "source_files": "GGNetWorkManagerPublic/Classes/Define/**"
-    },
-    {
-      "name": "Help",
-      "subspecs": [
-        {
-          "name": "GGNetWorkHelper",
-          "source_files": "GGNetWorkManagerPublic/Classes/Help/GGNetWorkHelper/**"
-        }
-      ]
-    },
-    {
-      "name": "YTKNetwork",
-      "subspecs": [
-        {
-          "name": "Accessory",
-          "source_files": "GGNetWorkManagerPublic/Classes/YTKNetwork/Accessory/**"
-        },
-        {
-          "name": "Category",
-          "source_files": "GGNetWorkManagerPublic/Classes/YTKNetwork/Category/**"
-        },
-        {
-          "name": "Filter",
-          "source_files": "GGNetWorkManagerPublic/Classes/YTKNetwork/Filter/**"
-        },
-        {
-          "name": "Protocol",
-          "source_files": "GGNetWorkManagerPublic/Classes/YTKNetwork/Protocol/**"
-        }
-      ]
-    }
-  ]
+  }
 }

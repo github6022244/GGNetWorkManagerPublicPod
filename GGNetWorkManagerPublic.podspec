@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'GGNetWorkManagerPublic'
-  s.version          = '0.1.9'
+  s.version          = '0.1.10'
   s.summary          = 'iOS 网络管理器 GGNetWorkManager公有库'
 
 # This description is used to generate tags and improve search results.
@@ -42,36 +42,36 @@ TODO: Add long description of the pod here.
   s.dependency 'AFNetworking', '~> 4.0.1'
   s.dependency 'YTKNetwork', '~> 3.0.6'
   
-  s.subspec 'Define' do |dd|
-      dd.source_files = 'GGNetWorkManagerPublic/Classes/Define/**'
-  end
-      
-  s.subspec 'Help' do |hh|
-      
-      hh.subspec 'GGNetWorkHelper' do |hhh|
-          hhh.source_files = 'GGNetWorkManagerPublic/Classes/Help/GGNetWorkHelper/**'
-      end
-      
-  end
-  
-  s.subspec 'YTKNetwork' do |yy|
-      
-      yy.subspec 'Accessory' do |yyy|
-          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Accessory/**'
-      end
-      
-      yy.subspec 'Category' do |yyy|
-          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Category/**'
-      end
-      
-      yy.subspec 'Filter' do |yyy|
-          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Filter/**'
-      end
-      
-      yy.subspec 'Protocol' do |yyy|
-          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Protocol/**'
-      end
-      
-  end
+#  s.subspec 'Define' do |dd|
+#      dd.source_files = 'GGNetWorkManagerPublic/Classes/Define/*.{h,m}'
+#  end
+#
+#  s.subspec 'Help' do |hh|
+#
+#      hh.subspec 'GGNetWorkHelper' do |hhh|
+#          hhh.source_files = 'GGNetWorkManagerPublic/Classes/Help/GGNetWorkHelper/*.{h,m}'
+#      end
+#
+#  end
+#
+#  s.subspec 'YTKNetwork' do |yy|
+#
+#      yy.subspec 'Accessory' do |yyy|
+#          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Accessory/*.{h,m}'
+#      end
+#
+#      yy.subspec 'Category' do |yyy|
+#          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Category/*.{h,m}'
+#      end
+#
+#      yy.subspec 'Filter' do |yyy|
+#          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Filter/*.{h,m}'
+#      end
+#
+#      yy.subspec 'Protocol' do |yyy|
+#          yyy.source_files = 'GGNetWorkManagerPublic/Classes/YTKNetwork/Protocol/*.{h,m}'
+#      end
+#
+#  end
   
 end

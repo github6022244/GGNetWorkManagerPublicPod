@@ -14,39 +14,7 @@ PODS:
   - AFNetworking/Serialization (4.0.1)
   - AFNetworking/UIKit (4.0.1):
     - AFNetworking/NSURLSession
-  - GGNetWorkManagerPublic (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - GGNetWorkManagerPublic/Define (= 0.1.9)
-    - GGNetWorkManagerPublic/Help (= 0.1.9)
-    - GGNetWorkManagerPublic/YTKNetwork (= 0.1.9)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/Define (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/Help (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - GGNetWorkManagerPublic/Help/GGNetWorkHelper (= 0.1.9)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/Help/GGNetWorkHelper (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/YTKNetwork (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - GGNetWorkManagerPublic/YTKNetwork/Accessory (= 0.1.9)
-    - GGNetWorkManagerPublic/YTKNetwork/Category (= 0.1.9)
-    - GGNetWorkManagerPublic/YTKNetwork/Filter (= 0.1.9)
-    - GGNetWorkManagerPublic/YTKNetwork/Protocol (= 0.1.9)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/YTKNetwork/Accessory (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/YTKNetwork/Category (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/YTKNetwork/Filter (0.1.9):
-    - AFNetworking (~> 4.0.1)
-    - YTKNetwork (~> 3.0.6)
-  - GGNetWorkManagerPublic/YTKNetwork/Protocol (0.1.9):
+  - GGNetWorkManagerPublic (0.1.10):
     - AFNetworking (~> 4.0.1)
     - YTKNetwork (~> 3.0.6)
   - QMUIKit (4.1.3):
@@ -376,7 +344,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
-  GGNetWorkManagerPublic: 8099b3c150195700e9c83e38165a81cb3554d30f
+  GGNetWorkManagerPublic: 7da2bffcb9ccc61afed87983550d05b902789194
   QMUIKit: 1063a99f90aedd6e2dd65026ce0df46e6785e67b
   YTKNetwork: c16be90b06be003de9e9cd0d3b187cc8eaf35c04
 
