@@ -12,6 +12,9 @@
 
 @interface MRUrlArgumentsFilter ()
 
+/// 当前 request 的 requestArguments
+@property (nonatomic, strong) NSDictionary *originArguments;
+
 @end
 
 @implementation MRUrlArgumentsFilter {
@@ -38,7 +41,7 @@
     }
     
     // 添加公共参数
-    BOOL useCommenParameters = YES;
+    BOOL useCommenParameters = NO;
 
 GGNetWorkPushIgnoreUndeclaredSelectorWarning
     if ([request respondsToSelector:@selector(useCommenParameters)]) {
@@ -48,7 +51,9 @@ GGNetWorkPopClangDiagnosticWarnings
 
     if (useCommenParameters) {
         
-        GGNetWorkExchangeImplementationsInTwoClasses([request class], @selector(requestArgument), [self class], @selector(gg_requestArgument));
+        _originArguments = [request requestArgument];
+        
+        GGNetWorkExchangeImplementationsInTwoClasses([request class], @selector(requestArgument), [self class], @selector(requestArgument));
     }
     
     return originUrl;
@@ -56,12 +61,10 @@ GGNetWorkPopClangDiagnosticWarnings
 //    return [self urlStringWithOriginUrlString:originUrl appendParameters:_arguments];
 }
 
-- (id)gg_requestArgument {
+- (id)requestArgument {
     NSMutableDictionary *param = [NSMutableDictionary dictionaryWithDictionary:_arguments];
     
-    NSDictionary *ori_Param = [self gg_requestArgument];
-    
-    [param addEntriesFromDictionary:ori_Param];
+    [param addEntriesFromDictionary:_originArguments];
     
     return param;
 }
