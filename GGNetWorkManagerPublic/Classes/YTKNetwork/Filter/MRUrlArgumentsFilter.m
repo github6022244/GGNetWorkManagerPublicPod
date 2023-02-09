@@ -42,7 +42,7 @@
 
 GGNetWorkPushIgnoreUndeclaredSelectorWarning
     if ([request respondsToSelector:@selector(useCommenParameters)]) {
-        useCommenParameters = [self performSelector:@selector(useCommenParameters)];
+        useCommenParameters = [request performSelector:@selector(useCommenParameters)];
     }
 GGNetWorkPopClangDiagnosticWarnings
 
