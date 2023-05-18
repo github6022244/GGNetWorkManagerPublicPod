@@ -39,7 +39,10 @@
 
 // 可以定制参数，不影响已经配置的公共参数
 - (id)requestArgument {
-    return nil;
+    return @{
+        @"tag": @(self.tag),
+        @"key_1": @"参数_1",
+    };
 }
 
 // 可以指定域名，也可以不指定，按照配置的来
@@ -74,12 +77,12 @@
 }
 
 /// 是否使用公共参数（默认YES）
-- (BOOL)useCommenParameters {
+- (BOOL)usecommonParameters {
     return YES;
 }
 
 /// 是否使用公共Header（默认YES）
-- (BOOL)useCommenHeader {
+- (BOOL)usecommonHeader {
     return YES;
 }
 

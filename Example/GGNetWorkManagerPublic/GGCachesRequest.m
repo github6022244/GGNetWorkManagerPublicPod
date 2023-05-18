@@ -20,12 +20,12 @@
 }
 
 /// 是否使用公共参数（默认YES）
-- (BOOL)useCommenParameters {
+- (BOOL)usecommonParameters {
     return YES;
 }
 
 /// 是否使用公共Header（默认YES）
-- (BOOL)useCommenHeader {
+- (BOOL)usecommonHeader {
     return YES;
 }
 

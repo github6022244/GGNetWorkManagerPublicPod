@@ -15,50 +15,54 @@
 #pragma mark ------------------------- Interface -------------------------
 #pragma mark --- 获取根window
 + (UIWindow *)getKeyWindow {
-    if (@available(iOS 15, *)) {
-      __block UIScene * _Nonnull tmpSc;
-       [[[UIApplication sharedApplication] connectedScenes] enumerateObjectsUsingBlock:^(UIScene * _Nonnull obj, BOOL * _Nonnull stop) {
-           if (obj.activationState == UISceneActivationStateForegroundActive) {
-               tmpSc = obj;
-               *stop = YES;
-           }
-       }];
-       UIWindowScene *curWinSc = (UIWindowScene *)tmpSc;
+    if (@available(iOS 13, *)) {
+        UIWindow *window = nil;
         
-        UIWindow *rWindow = curWinSc.keyWindow;
-        
-        if (rWindow) {
-            return rWindow;
-        } else {
-            return [[UIApplication sharedApplication] windows].lastObject;
+        UIScene * _Nonnull tmpSc = nil;
+        for (UIScene *obj in [[UIApplication sharedApplication] connectedScenes]) {
+            if (obj.activationState == UISceneActivationStateForegroundActive) {
+                tmpSc = obj;
+                break;
+            }
         }
-    } else if (@available(iOS 13, *)) {
-        __block UIScene * _Nonnull tmpSc;
-         [[[UIApplication sharedApplication] connectedScenes] enumerateObjectsUsingBlock:^(UIScene * _Nonnull obj, BOOL * _Nonnull stop) {
-             if (obj.activationState == UISceneActivationStateForegroundActive) {
-                 tmpSc = obj;
-                 *stop = YES;
-             }
-         }];
-         UIWindowScene *curWinSc = (UIWindowScene *)tmpSc;
+        
+        UIWindowScene *curWinSc = (UIWindowScene *)tmpSc;
+        
+        for (UIWindow *w in curWinSc.windows) {
+            if (w.isKeyWindow) {
+                window = w;
+            }
+        }
           
-          UIWindow *rWindow = [curWinSc valueForKeyPath:@"delegate.window"];
-          
-          if (rWindow) {
-              return rWindow;
-          } else {
-              return [[UIApplication sharedApplication] windows].lastObject;
-          }
-    }
-    else {
-       return [UIApplication sharedApplication].keyWindow;
+        if (window) {
+            return window;
+        } else {
+            NSLog(@"\n没有在 Scenes 中找到 window, 从 Application windows 中查找 keyWindow");
+            return [self _getLastWindowInWindowsArray];
+        }
+    } else {
+        NSLog(@"\n iOS 13 以下从 Application windows 中查找 keyWindow");
+       return [self _getLastWindowInWindowsArray];
    }
+}
+
+/// 获取 window
++ (UIWindow *)_getLastWindowInWindowsArray {
+    NSArray *windowsArray = [[UIApplication sharedApplication] windows];
+    
+    for (UIWindow *window in windowsArray) {
+        if (window.isKeyWindow) {
+            return window;
+        }
+    }
+    
+    return windowsArray.firstObject;
 }
 
 #pragma mark --- 获取打印网络请求字符串
 + (NSString *)getStringToLogRequest:(YTKBaseRequest *)request forRequestFail:(BOOL)forRequestFail appendString:(NSString *)appendString {
     // 获取所有参数
-    NSMutableDictionary *totalParam = [NSMutableDictionary dictionaryWithDictionary:[GGNetWorkManager share].commenParameters];
+    NSMutableDictionary *totalParam = [NSMutableDictionary dictionaryWithDictionary:[GGNetWorkManager share].commonParameters];
     [totalParam addEntriesFromDictionary:[request requestArgument]];
     
     if (forRequestFail) {
@@ -108,7 +112,27 @@
             }
         }
         
-        NSMutableString *mStr = [NSString stringWithFormat:@"\n\n\n!!!!!!!!!!!!!!!!!!网络请求!!!!!!!!!!!!!!!!!!!\n域名:\n%@\n路径:\n%@\n公共参数:\n%@\n独立参数:\n%@\n请求接口所在的页面 :\n%@\n", baseUrl, [request requestUrl], [GGNetWorkManager share].commenParameters, [request requestArgument], targetName].mutableCopy;
+        /// 获取独立参数
+        /// 独立参数获取方式为 request 的 -(id)requestArgument {} 方法
+        /// 因为在合成请求对象的时候(YTKNetworkAgent+GGNetWork.m  重写了 addRequest: 方法)，为了拼接公共参数而重写了独立参数方法导致在
+        /// 请求合成 -> 请求开始之前，调用这个获取独立参数方法的时候，返回的是包含 公共参数 + 独立参数 的字典
+        /// 所以进行一个去除公共参数的操作，获取独立参数
+        NSDictionary *commonParameters = [GGNetWorkManager share].commonParameters;
+        
+        NSDictionary *requestArgument = [request requestArgument];
+        NSMutableDictionary *mDict = [NSMutableDictionary dictionary];
+
+        if ([requestArgument isKindOfClass:[NSDictionary class]]) {
+            [requestArgument enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                // 去重
+                if (![commonParameters.allKeys containsObject:key]) {
+                    [mDict setObject:obj forKey:key];
+                }
+            }];
+        }
+        
+        // 正式拼接所有内容
+        NSMutableString *mStr = [NSString stringWithFormat:@"\n\n\n!!!!!!!!!!!!!!!!!!网络请求!!!!!!!!!!!!!!!!!!!\n域名:\n%@\n路径:\n%@\n公共参数:\n%@\n独立参数:\n%@\n请求接口所在的页面 :\n%@\n", baseUrl, [request requestUrl], commonParameters, requestArgument, targetName].mutableCopy;
         
         if (appendString) {
             [mStr appendFormat:@"%@\n", appendString];

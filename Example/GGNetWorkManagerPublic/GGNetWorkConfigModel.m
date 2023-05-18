@@ -19,8 +19,8 @@
 }
 
 // 返回公共参数
-- (NSDictionary *_Nullable)gg_configCommenParameters {
-    return [self _configCommenParameterWithParam:nil];
+- (NSDictionary *_Nullable)gg_configcommonParameters {
+    return [self _configcommonParameterWithParam:nil];
 }
 
 // 返回请求缓存 path
@@ -95,7 +95,7 @@
 }
 
 #pragma mark --- 获取公共参数
-- (NSDictionary *)_configCommenParameterWithParam:(id)parameter {
+- (NSDictionary *)_configcommonParameterWithParam:(id)parameter {
     NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:parameter];
 //    if (![dic.allKeys containsObject:@"user_id"]) {
 //        [dic setObject:@([UserInfoManager sharedManager].user_id) ?: @(0) forKey:@"user_id"];

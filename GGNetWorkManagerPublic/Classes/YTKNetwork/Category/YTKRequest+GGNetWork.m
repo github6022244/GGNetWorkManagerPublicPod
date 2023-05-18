@@ -1,6 +1,6 @@
 //
 //  YTKRequest+GGNetWork.m
-//  GGCommenAppFundation
+//  GGcommonAppFundation
 //
 //  Created by GG on 2022/6/10.
 //

@@ -48,7 +48,7 @@
 #pragma mark ------------------------- Private -------------------------
 - (void)configNetWork {
     [GGNetWorkManager setUpConfigModel:[GGNetWorkConfigModel new]];
-//    [GGNetWorkManager share].debugLogEnable = YES;
+    [GGNetWorkManager share].debugLogEnable = YES;
 }
 
 @end

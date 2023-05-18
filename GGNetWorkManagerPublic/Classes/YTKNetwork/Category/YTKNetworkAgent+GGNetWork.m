@@ -15,10 +15,16 @@
 
 @implementation YTKNetworkAgent (GGNetWork)
 
+static YTKBaseRequest *currentRequest = nil;
+
+static NSDictionary *currentRequestOriginArgumens = nil;
+
 + (void)load {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         GGNetWorkExchangeImplementations([self class], @selector(init), @selector(gg_init));
+        
+        GGNetWorkExchangeImplementations([self class], @selector(addRequest:), @selector(gg_addRequest:));
         
 GGNetWorkPushIgnoreUndeclaredSelectorWarning
         
@@ -58,12 +64,12 @@ GGNetWorkPopClangDiagnosticWarnings
 - (AFHTTPRequestSerializer *)gg_requestSerializerForRequest:(YTKBaseRequest *)request {
     AFHTTPRequestSerializer *requestSerializer = [self gg_requestSerializerForRequest:request];
     
-    BOOL useCommenHeader = YES;
-    if ([self respondsToSelector:@selector(useCommenHeader)]) {
-        useCommenHeader = [self performSelector:@selector(useCommenHeader)];
+    BOOL usecommonHeader = YES;
+    if ([self respondsToSelector:@selector(usecommonHeader)]) {
+        usecommonHeader = [self performSelector:@selector(usecommonHeader)];
     }
     
-    if (useCommenHeader) {
+    if (usecommonHeader) {
         // 通过 GGNetWorkManager 的 requestHeaders 设置一次 header
         NSDictionary *managerRequestHeaders = [GGNetWorkManager share].requestHeaders;
         if (managerRequestHeaders) {
@@ -77,7 +83,56 @@ GGNetWorkPopClangDiagnosticWarnings
     return requestSerializer;
 }
 
+#pragma mark --- 重写 addRequest：
+- (void)gg_addRequest:(YTKBaseRequest *)request {
+    // 添加公共参数
+    BOOL usecommonParameters = NO;
+
+GGNetWorkPushIgnoreUndeclaredSelectorWarning
+    if ([request respondsToSelector:@selector(usecommonParameters)]) {
+        usecommonParameters = [request performSelector:@selector(usecommonParameters)];
+    }
+GGNetWorkPopClangDiagnosticWarnings
+
+    if (usecommonParameters) {
+        @synchronized (self) {
+            currentRequest = request;
+            currentRequestOriginArgumens = [request requestArgument];
+            
+            GGNetWorkExchangeImplementationsInTwoClasses([request class], @selector(requestArgument), [self class], @selector(gg_requestArguments));
+            
+            [self gg_addRequest:request];
+            
+            GGNetWorkExchangeImplementationsInTwoClasses([self class], @selector(gg_requestArguments), [request class], @selector(requestArgument));
+        }
+    } else {
+        [self gg_addRequest:request];
+    }
+}
+
 #pragma mark ------------------------- Private -------------------------
+#pragma mark --- 交换request方法 拼接公共参数
+- (id)gg_requestArguments {
+    @synchronized (self) {
+        NSMutableDictionary *param = [NSMutableDictionary dictionaryWithDictionary:[GGNetWorkManager share].commonParameters];
+        
+        if (currentRequestOriginArgumens) {
+            // Request 有独立参数
+            if ([currentRequestOriginArgumens isKindOfClass:[NSDictionary class]]) {
+                [param addEntriesFromDictionary:currentRequestOriginArgumens];
+            } else {
+                GGNetWorkLog(@"Error：拼接公共参数失败!\nInfo:Request传入的独立参数不是字典，无法拼接公共参数。(独立参数即Request - (id)requestArgument){} 返回的参数)\n目前的处理是只上传独立参数。公共参数会被忽略");
+                
+                return currentRequestOriginArgumens;
+            }
+        } else {
+            GGNetWorkLog(@"没有独立参数");
+        }
+        
+        return param;
+    }
+}
+
 - (void)gg_class_copyIvarList:(Class)class {
     unsigned int count;
     Ivar *ivarList = class_copyIvarList(class, &count);
@@ -105,3 +160,22 @@ GGNetWorkPopClangDiagnosticWarnings
 }
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

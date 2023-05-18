@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MRCacheDirPathFilter : NSObject<YTKCacheDirPathFilterProtocol>
+@interface GGNetworkCacheDirPathFilter : NSObject<YTKCacheDirPathFilterProtocol>
 
 - (NSString *)filterCacheDirPath:(NSString *)originPath withRequest:(YTKBaseRequest *)request;
 

@@ -9,8 +9,7 @@
 #import "GGNetWorkManagerDefine.h"
 #import <YTKNetwork/YTKNetworkConfig.h>
 #import <YTKNetwork/YTKRequest.h>
-#import "MRUrlArgumentsFilter.h"
-#import "MRCacheDirPathFilter.h"
+#import "GGNetworkCacheDirPathFilter.h"
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
@@ -29,7 +28,7 @@
 
 @property (nonatomic, strong) NSDictionary *requestHeaders;// 请求 header (通过 configModel 配置)
 
-@property (nonatomic, strong) NSDictionary *commenParameters;// 请求公共参数 (通过 configModel 配置)
+@property (nonatomic, strong) NSDictionary *commonParameters;// 请求公共参数 (通过 configModel 配置)
 
 @property (nonatomic, strong) NSDictionary *filterCacheDirPath;// 请求缓存本地地址
 
@@ -63,7 +62,7 @@
     
     self.requestHeaders = [self.configModel gg_configRequestHeaders];
     
-    self.commenParameters = [self.configModel gg_configCommenParameters];
+    self.commonParameters = [self.configModel gg_configcommonParameters];
     
     self.filterCacheDirPath = [self.configModel gg_configFilterCacheDirPath];
     
@@ -82,11 +81,8 @@
     [YTKNetworkConfig sharedConfig].baseUrl = GGNetWorkManagerShareInstance.currentServerURL;
     [YTKNetworkConfig sharedConfig].cdnUrl = GGNetWorkManagerShareInstance.currentCDNURL;
     [YTKNetworkConfig sharedConfig].debugLogEnabled = GGNetWorkManagerShareInstance.debugLogEnable;
-
-    MRUrlArgumentsFilter *urlFilter = [MRUrlArgumentsFilter filterWithArguments:self.commenParameters];
-    [[YTKNetworkConfig sharedConfig] addUrlFilter:urlFilter];
     
-    MRCacheDirPathFilter *cacheDirPathFilter = [[MRCacheDirPathFilter alloc] init];
+    GGNetworkCacheDirPathFilter *cacheDirPathFilter = [[GGNetworkCacheDirPathFilter alloc] init];
     [[YTKNetworkConfig sharedConfig] addCacheDirPathFilter:cacheDirPathFilter];
     
     /// 证书配置

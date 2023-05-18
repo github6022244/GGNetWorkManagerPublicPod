@@ -19,7 +19,7 @@
 - (NSDictionary *_Nullable)gg_configRequestHeaders;
 
 // 返回公共参数
-- (NSDictionary *_Nullable)gg_configCommenParameters;
+- (NSDictionary *_Nullable)gg_configcommonParameters;
 
 
 /// 返回请求缓存 path

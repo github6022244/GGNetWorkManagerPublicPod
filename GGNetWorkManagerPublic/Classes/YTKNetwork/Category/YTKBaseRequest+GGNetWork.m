@@ -22,10 +22,6 @@
     });
 #endif
     
-//    static dispatch_once_t onceToken1;
-//    dispatch_once(&onceToken1, ^{
-//        GGNetWorkExchangeImplementations([self class], @selector(requestArgument), @selector(gg_requestArgument));
-//    });
 }
 
 #pragma mark --- 统一处理失败回调
@@ -35,27 +31,5 @@
     
     [self gg_requestFailedFilter];
 }
-
-//#pragma mark --- 添加公共参数
-//- (id)gg_requestArgument {
-//    NSDictionary *argument = [self gg_requestArgument];
-//
-//    // 添加公共参数
-//    BOOL useCommenParameters = YES;
-//
-//    if ([self respondsToSelector:@selector(useCommenParameters)]) {
-//        useCommenParameters = [self performSelector:@selector(useCommenParameters)];
-//    }
-//
-//    if (useCommenParameters) {
-//        NSMutableDictionary *commenParam = [GGNetWorkManager share].commenParameters.mutableCopy;
-//
-//        [commenParam addEntriesFromDictionary:argument];
-//
-//        argument = commenParam;
-//    }
-//
-//    return argument;
-//}
 
 @end

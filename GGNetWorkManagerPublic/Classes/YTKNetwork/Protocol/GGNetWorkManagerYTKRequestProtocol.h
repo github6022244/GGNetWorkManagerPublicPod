@@ -16,9 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 如果缓存验证不通过，是否自动删除缓存文件
 - (BOOL)autoClearCachesIfNotValidate;
 /// 是否使用公共参数（不实现则默认YES）
-- (BOOL)useCommenParameters;
+- (BOOL)usecommonParameters;
 /// 是否使用公共Header（不实现则默认YES）
-- (BOOL)useCommenHeader;
+- (BOOL)usecommonHeader;
 
 @end
 

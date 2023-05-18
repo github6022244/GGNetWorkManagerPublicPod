@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'GGNetWorkManagerPublic'
-  s.version          = '0.1.13'
+  s.version          = '0.2.0'
   s.summary          = 'iOS 网络管理器 GGNetWorkManager公有库'
 
 # This description is used to generate tags and improve search results.

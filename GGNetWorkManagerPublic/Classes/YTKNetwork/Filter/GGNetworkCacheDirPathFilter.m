@@ -5,10 +5,10 @@
 //  Created by GG on 2020/11/14.
 //
 
-#import "MRCacheDirPathFilter.h"
+#import "GGNetworkCacheDirPathFilter.h"
 #import "GGNetWorkManager.h"
 
-@implementation MRCacheDirPathFilter
+@implementation GGNetworkCacheDirPathFilter
 
 - (NSString *)filterCacheDirPath:(NSString *)originPath withRequest:(YTKBaseRequest *)request {
     // 在这里可以设置网络请求的缓存path
