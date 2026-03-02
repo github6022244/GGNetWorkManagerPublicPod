@@ -9,7 +9,7 @@
 #import <GGAFNetworking/AFNetworking.h>
 #import "GGNetWorkManagerDefine.h"
 #import "GGNetWorkManagerConfigProtocol.h"
-#import "GGNetWorkManagerLoadingProtocol.h"
+//#import "GGNetWorkManagerLoadingProtocol.h"
 
 
 #pragma mark --- GGNetWorkManager
