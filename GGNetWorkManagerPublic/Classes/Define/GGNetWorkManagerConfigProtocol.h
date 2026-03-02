@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <GGAFNetworking/AFHTTPSessionManager.h>
 #import "GGNetWorkManagerDefine.h"
-#import "GGNetWorkManagerLoadingProtocol.h"
+@protocol GGNetWorkManagerLoadingProtocol;
 
 #pragma mark --- 传入的配置对象需要实现的协议
 @protocol GGNetWorkManagerConfigProtocol <NSObject>

@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <GGNetWorkManager.h>
+#import "GGNetWorkManagerLoadingProtocol.h"
 
 NS_ASSUME_NONNULL_BEGIN
 // 网络请求配置类

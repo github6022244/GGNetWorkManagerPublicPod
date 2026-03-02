@@ -1,6 +1,6 @@
 PODS:
   - GGAFNetworking (0.1.5)
-  - GGNetWorkManagerPublic (1.0.1):
+  - GGNetWorkManagerPublic (1.0.5):
     - GGAFNetworking
     - GGYTKNetwork
   - GGYTKNetwork (0.1.0):
@@ -338,7 +338,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   GGAFNetworking: 100a169771f4b7745038b0c0a62a1ec827eed9ca
-  GGNetWorkManagerPublic: 622fe4ff9f8042504f6e80018dff0319cfc24f68
+  GGNetWorkManagerPublic: 3c14aceec0c46428c35be72d4643cbe168b6b5c6
   GGYTKNetwork: c0ce6ff91909d6d9ab99c9690a6a089aa6555943
   QMUIKit: 3c622fe3c55c0dccfad750634bd9ee5e7ade9a53
 

@@ -5,6 +5,7 @@
 //  Created by GG on 2022/5/17.
 //
 
+#import "GGNetWorkManagerConfigProtocol.h"
 #import "GGNetWorkManager.h"
 #import "GGNetWorkManagerDefine.h"
 #import <GGYTKNetwork/YTKNetworkConfig.h>
