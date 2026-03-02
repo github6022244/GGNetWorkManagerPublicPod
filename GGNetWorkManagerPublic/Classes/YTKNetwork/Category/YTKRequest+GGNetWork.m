@@ -1,6 +1,6 @@
 //
 //  YTKRequest+GGNetWork.m
-//  GGcommonAppFundation
+//  GGCommenAppFundation
 //
 //  Created by GG on 2022/6/10.
 //
@@ -15,11 +15,13 @@
 + (void)load {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        GGNetWorkExchangeImplementations([self class], @selector(saveResponseDataToCacheFile:), @selector(gg_saveResponseDataToCacheFile:));
+        Method oriMethod = class_getInstanceMethod([self class], @selector(saveResponseDataToCacheFile:));
+        Method newMethod = class_getInstanceMethod([self class], @selector(gg_saveResponseDataToCacheFile:));
+        method_exchangeImplementations(oriMethod, newMethod);
         
-GGNetWorkPushIgnoreUndeclaredSelectorWarning
-        GGNetWorkExchangeImplementations([self class], @selector(validateCacheWithError:), @selector(gg_validateCacheWithError:));
-GGNetWorkPopClangDiagnosticWarnings
+        Method oriMethod_2 = class_getInstanceMethod([self class], @selector(validateCacheWithError:));
+        Method newMethod_2 = class_getInstanceMethod([self class], @selector(gg_validateCacheWithError:));
+        method_exchangeImplementations(oriMethod_2, newMethod_2);
     });
 }
 
@@ -27,11 +29,9 @@ GGNetWorkPopClangDiagnosticWarnings
     BOOL reslut = [self gg_validateCacheWithError:error];
     
     BOOL autoClear = NO;
-GGNetWorkPushIgnoreUndeclaredSelectorWarning
     if ([self respondsToSelector:@selector(autoClearCachesIfNotValidate)]) {
         autoClear = [self performSelector:@selector(autoClearCachesIfNotValidate)];
     }
-GGNetWorkPopClangDiagnosticWarnings
     
     if (!reslut && autoClear) {
         // 未验证通过
@@ -60,7 +60,9 @@ GGNetWorkPopClangDiagnosticWarnings
             NSNumber *number = self.responseObject;
             exchangeData = [number.stringValue dataUsingEncoding:NSUTF8StringEncoding];
         } else {
-            GGNetWorkLog(@"responseObject 类型转换失败, 需完善类型判断");
+            if ([GGNetWorkManager share].debugLogEnable) {
+                GGNetWorkLog(@"responseObject 类型转换失败, 需完善类型判断");
+            }
         }
     }
     
@@ -69,10 +71,8 @@ GGNetWorkPopClangDiagnosticWarnings
 
 #pragma mark --- 如果存在缓存文件则删除
 - (void)clearCachesIfExists {
-GGNetWorkPushIgnoreUndeclaredSelectorWarning
-    if ([self respondsToSelector:@selector(cacheMetadataFilePath)]) {
-        NSString *path = [self performSelector:@selector(cacheMetadataFilePath)];
-GGNetWorkPopClangDiagnosticWarnings
+    if ([self respondsToSelector:NSSelectorFromString(@"cacheMetadataFilePath")]) {
+        NSString *path = [self performSelector:NSSelectorFromString(@"cacheMetadataFilePath")];
         
         NSFileManager * fileManager = [NSFileManager defaultManager];
         if ([fileManager fileExistsAtPath:path]) {

@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -28,7 +28,6 @@
 #import "UIView+QMUI.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "QMUIEmptyView.h"
-#import "UIControl+QMUI.h"
 #import "UIViewController+QMUI.h"
 #import "QMUILog.h"
 #import "QMUIAppearance.h"
@@ -123,6 +122,16 @@ static NSString * const kImageOrUnknownCellIdentifier = @"imageorunknown";
     [self.collectionView reloadData];
 }
 
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    // 在 pop 回相簿列表时重置标志位以使下次进来 picker 时 collection 可以滚动到正确的初始位置
+    // 但不能影响从 picker 进入大图的路径
+    if (self.navigationController && ![self.navigationController.viewControllers containsObject:self]) {
+        self.hasScrollToInitialPosition = NO;
+    }
+}
+
 - (void)showEmptyView {
     [super showEmptyView];
     self.emptyView.backgroundColor = self.view.backgroundColor; // 为了盖住背后的 collectionView，这里加个背景色（不盖住的话会看到 collectionView 先滚到列表顶部然后跳到列表底部）
@@ -147,7 +156,7 @@ static NSString * const kImageOrUnknownCellIdentifier = @"imageorunknown";
     if (!CGSizeEqualToSize(self.collectionView.frame.size, self.view.bounds.size)) {
         self.collectionView.frame = self.view.bounds;
     }
-    UIEdgeInsets contentInset = UIEdgeInsetsMake(self.qmui_navigationBarMaxYInViewCoordinator, self.collectionView.qmui_safeAreaInsets.left, MAX(operationToolBarViewHeight, self.collectionView.qmui_safeAreaInsets.bottom), self.collectionView.qmui_safeAreaInsets.right);
+    UIEdgeInsets contentInset = UIEdgeInsetsMake(self.qmui_navigationBarMaxYInViewCoordinator, self.collectionView.safeAreaInsets.left, MAX(operationToolBarViewHeight, self.collectionView.safeAreaInsets.bottom), self.collectionView.safeAreaInsets.right);
     if (!UIEdgeInsetsEqualToEdgeInsets(self.collectionView.contentInset, contentInset)) {
         self.collectionView.contentInset = contentInset;
         self.collectionView.scrollIndicatorInsets = UIEdgeInsetsMake(contentInset.top, 0, contentInset.bottom, 0);
@@ -245,10 +254,6 @@ static NSString * const kImageOrUnknownCellIdentifier = @"imageorunknown";
     }
 }
 
-- (void)willPopInNavigationControllerWithAnimated:(BOOL)animated {
-    self.hasScrollToInitialPosition = NO;
-}
-
 #pragma mark - Getters & Setters
 
 @synthesize collectionViewLayout = _collectionViewLayout;
@@ -274,11 +279,7 @@ static NSString * const kImageOrUnknownCellIdentifier = @"imageorunknown";
         _collectionView.backgroundColor = UIColorClear;
         [_collectionView registerClass:[QMUIImagePickerCollectionViewCell class] forCellWithReuseIdentifier:kVideoCellIdentifier];
         [_collectionView registerClass:[QMUIImagePickerCollectionViewCell class] forCellWithReuseIdentifier:kImageOrUnknownCellIdentifier];
-        if (@available(iOS 11, *)) {
-            _collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-        } else {
-            self.automaticallyAdjustsScrollViewInsets = NO;
-        }
+        _collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     }
     return _collectionView;
 }

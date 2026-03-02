@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -54,7 +54,9 @@ typedef NS_ENUM(NSInteger, QMUINavigationTitleViewAccessoryType) {
 
 
 /**
- *  可作为navgationItem.titleView 的标题控件。
+ *  可作为 UIViewController 顶部导航栏里的标题控件，通过 self.navigationItem.titleView 来设置。当调用 -[UIViewController setTitle:] 或 -[UINavigationItem setTitle:] 时，会自动更新 QMUINavigationTitleView 的内容。
+ *
+ *  也可以当成单独的组件，脱离 UIViewController 使用，就跟普通组件一样。
  *
  *  支持主副标题，且可控制主副标题的布局方式（水平或垂直）；支持在左边显示loading，在右边显示accessoryView（如箭头）。
  *
@@ -70,6 +72,7 @@ typedef NS_ENUM(NSInteger, QMUINavigationTitleViewAccessoryType) {
 @property(nonatomic, weak) id<QMUINavigationTitleViewDelegate> delegate;
 @property(nonatomic, assign) QMUINavigationTitleViewStyle style;
 @property(nonatomic, assign, getter=isActive) BOOL active;
+@property(nonatomic, assign) UIEdgeInsets padding UI_APPEARANCE_SELECTOR;
 @property(nonatomic, assign) CGFloat maximumWidth UI_APPEARANCE_SELECTOR;
 
 #pragma mark - Titles
@@ -82,6 +85,13 @@ typedef NS_ENUM(NSInteger, QMUINavigationTitleViewAccessoryType) {
 
 /// 当 tintColor 发生变化时是否要自动把 titleLabel、subtitleLabel、loadingView 的颜色也更新为 tintColor 的色值，默认为 YES，如果你自己修改了 titleLabel、subtitleLabel、loadingView 的颜色，需要把这个值置为 NO
 @property(nonatomic, assign) BOOL adjustsSubviewsTintColorAutomatically UI_APPEARANCE_SELECTOR;
+
+/**
+ * 是否自动调整 highlighted 时的样式，默认为YES。<br/>
+ * 当值为 YES 时，标题 highlighted 时会改变自身的 alpha 属性为 <b>UIControlHighlightedAlpha</b>
+ * 适用于比如说整个 titleView 不需要接受点击，但 accessoryView 需要接受点击，此时就应该 titleView.userInteractionEnabled = YES、titleView.adjustsSubviewsWhenHighlighted = NO
+ */
+@property(nonatomic, assign) BOOL adjustsSubviewsWhenHighlighted;
 
 /// 水平布局下的标题字体，默认为 NavBarTitleFont
 @property(nonatomic, strong) UIFont *horizontalTitleFont UI_APPEARANCE_SELECTOR;
@@ -118,7 +128,7 @@ typedef NS_ENUM(NSInteger, QMUINavigationTitleViewAccessoryType) {
 @property(nonatomic, assign) BOOL loadingViewHidden;
 
 /*
- *  如果为YES则title居中，loading放在title的左边，title右边有一个跟左边loading一样大的占位空间；如果为NO，loading和title整体居中。默认值为YES。
+ *  如果为YES则title居中，loading放在title的左边，title右边有一个跟左边loading一样大的占位空间（目的是为了让切换 loading 时文字不跳动）；如果为NO，loading和title整体居中。默认值为YES。
  */
 @property(nonatomic, assign) BOOL needsLoadingPlaceholderSpace;
 
@@ -172,4 +182,11 @@ typedef NS_ENUM(NSInteger, QMUINavigationTitleViewAccessoryType) {
  */
 - (instancetype)initWithStyle:(QMUINavigationTitleViewStyle)style;
 
+@end
+
+@interface UIView (QMUINavigationTitleView)
+
+/// 标记当前 view 是用于自定义的导航栏标题，QMUI 可以帮你自动处理系统的一些布局 bug，并且保证 pop 时导航栏标题颜色不会被前一个界面影响。
+/// 对于 QMUINavigationTitleView 而言默认值为 YES，其他 UIView 默认值为 NO。
+@property(nonatomic, assign) BOOL qmui_useAsNavigationTitleView;
 @end

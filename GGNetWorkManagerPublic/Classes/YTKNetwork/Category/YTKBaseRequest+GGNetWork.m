@@ -9,8 +9,6 @@
 #import <objc/runtime.h>
 #import "GGNetWorkManager.h"
 #import "GGNetWorkHelper.h"
-#import "GGNetWorkManagerDefine.h"
-#import "GGNetWorkManagerYTKRequestProtocol.h"
 
 @implementation YTKBaseRequest (GGNetWork)
 
@@ -18,16 +16,19 @@
 #ifdef DEBUG
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        GGNetWorkExchangeImplementations([self class], @selector(requestFailedFilter), @selector(gg_requestFailedFilter));
+        Method oriMethod_1 = class_getInstanceMethod([self class], @selector(requestFailedFilter));
+        Method newMethod_1 = class_getInstanceMethod([self class], @selector(gg_requestFailedFilter));
+        method_exchangeImplementations(oriMethod_1, newMethod_1);
     });
 #endif
-    
 }
 
 #pragma mark --- 统一处理失败回调
 ///  Called on the main thread when request failed.
 - (void)gg_requestFailedFilter {
-    GGNetWorkLog(@"%@", [GGNetWorkHelper getStringToLogRequest:self forRequestFail:YES appendString:nil]);
+    if ([GGNetWorkManager share].debugLogEnable) {
+        GGNetWorkLog(@"%@", [GGNetWorkHelper getStringToLogRequest:self forRequestFail:YES appendString:nil]);
+    }
     
     [self gg_requestFailedFilter];
 }

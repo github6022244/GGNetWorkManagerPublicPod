@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'GGNetWorkManagerPublic'
-  s.version          = '0.2.0'
+  s.version          = '1.0.0'
   s.summary          = 'iOS 网络管理器 GGNetWorkManager公有库'
 
 # This description is used to generate tags and improve search results.
@@ -28,7 +28,7 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/github6022244/GGNetWorkManagerPublicPod.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '9.0'
+  s.ios.deployment_target = '13.0'
 
   s.source_files = 'GGNetWorkManagerPublic/Classes/**/*'
   
@@ -39,8 +39,8 @@ TODO: Add long description of the pod here.
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   
-  s.dependency 'AFNetworking', '~> 4.0.1'
-  s.dependency 'YTKNetwork', '~> 3.0.6'
+  s.dependency 'GGAFNetworking'
+  s.dependency 'GGYTKNetwork'
   
 #  s.subspec 'Define' do |dd|
 #      dd.source_files = 'GGNetWorkManagerPublic/Classes/Define/*.{h,m}'

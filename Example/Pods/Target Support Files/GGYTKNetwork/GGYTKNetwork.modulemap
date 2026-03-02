@@ -1,0 +1,6 @@
+framework module GGYTKNetwork {
+  umbrella header "GGYTKNetwork-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -18,17 +18,14 @@
 
 #define CGContextInspectSize(size) [QMUIHelper inspectContextSize:size]
 
-#ifdef DEBUG
-    #define CGContextInspectContext(context) [QMUIHelper inspectContextIfInvalidatedInDebugMode:context]
-#else
-    #define CGContextInspectContext(context) if(![QMUIHelper inspectContextIfInvalidatedInReleaseMode:context]){return nil;}
-#endif
+#define CGContextInspectContext(context, returnValue) if(![QMUIHelper inspectContextIfInvalidated:context]){return returnValue;}
+#define CGContextInspectContextReturnVoid(context) if(![QMUIHelper inspectContextIfInvalidated:context]){return;}
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, QMUIImageShape) {
     QMUIImageShapeOval,                 // 椭圆
-    QMUIImageShapeTriangle,             // 三角形
+    QMUIImageShapeTriangle,             // 尖头向上的三角形
     QMUIImageShapeDisclosureIndicator,  // 列表 cell 右边的箭头
     QMUIImageShapeCheckmark,            // 列表 cell 右边的checkmark
     QMUIImageShapeDetailButtonImage,    // 列表 cell 右边的 i 按钮图片
@@ -52,6 +49,14 @@ typedef NS_ENUM(NSInteger, QMUIImageResizingMode) {
     QMUIImageResizingModeScaleAspectFillBottom          // 将图片保持宽高比例不变的情况下缩放到不超过给定的大小（但缩放后的大小不一定与给定大小相等），若有内容超出则会被裁剪。若裁剪则水平居中、垂直居下裁剪。
 };
 
+typedef NS_ENUM(NSInteger, QMUIImageGradientType) {
+    QMUIImageGradientTypeHorizontal,
+    QMUIImageGradientTypeVertical,
+    QMUIImageGradientTypeTopLeftToBottomRight,
+    QMUIImageGradientTypeTopRightToBottomLeft,
+    QMUIImageGradientTypeRadial,
+};
+
 @interface UIImage (QMUI)
 
 /**
@@ -64,6 +69,9 @@ typedef NS_ENUM(NSInteger, QMUIImageResizingMode) {
  @return 返回绘制完的图片
  */
 + (nullable UIImage *)qmui_imageWithSize:(CGSize)size opaque:(BOOL)opaque scale:(CGFloat)scale actions:(void (^)(CGContextRef contextRef))actionBlock;
+
+/// 获取当前图片在 ImageAsset 里的名字（若有），且即便经过 imageWithRenderingMode 转换后也依然可以正常保留该名字（系统默认转换后就丢失名字了）
+@property(nonatomic, copy, readonly, nullable) NSString *qmui_name;
 
 /// 当前图片是否是可拉伸/平铺的，也即通过 resizableImageWithCapInsets: 处理过的图片
 @property(nonatomic, assign, readonly) BOOL qmui_resizable;
@@ -314,6 +322,16 @@ typedef NS_ENUM(NSInteger, QMUIImageResizingMode) {
 + (nullable UIImage *)qmui_imageWithColor:(nullable UIColor *)color size:(CGSize)size cornerRadiusArray:(nullable NSArray<NSNumber *> *)cornerRadius;
 
 /**
+ 创建一个渐变图片，支持线性、径向。
+ @param colors 渐变的颜色，不能为空，数量必须与 locations 数量一致（除非 locations 为 nil）
+ @param type 渐变的类型，可选为水平、垂直、径向、左上至右下、右上至左下
+ @param locations 渐变变化的位置，数量必须与 colors 一致，值为 [0.0-1.0] 之间的 CGFloat。如果参数传 nil 则默认为 @[@0, @1]
+ @param size 图片的尺寸，如果是径向渐变，宽高不相等时会变成椭圆的渐变。
+ @param cornerRadius   四个角的圆角值的数组，长度必须为4，顺序分别为[左上角、左下角、右下角、右上角]
+ */
++ (nullable UIImage *)qmui_imageWithGradientColors:(NSArray<UIColor *> *)colors type:(QMUIImageGradientType)type locations:(nullable NSArray<NSNumber *> *)locations size:(CGSize)size cornerRadiusArray:(nullable NSArray<NSNumber *> *)cornerRadius;
+
+/**
  *  创建一个带边框路径，没有背景色的路径图片，border的路径为path
  *
  *  @param strokeColor  border的颜色
@@ -362,11 +380,6 @@ typedef NS_ENUM(NSInteger, QMUIImageResizingMode) {
  *  @param tintColor 图片颜色
  */
 + (nullable UIImage *)qmui_imageWithShape:(QMUIImageShape)shape size:(CGSize)size lineWidth:(CGFloat)lineWidth tintColor:(nullable UIColor *)tintColor;
-
-/**
- *  将文字渲染成图片，最终图片和文字一样大
- */
-+ (nullable UIImage *)qmui_imageWithAttributedString:(NSAttributedString *)attributedString;
 
 /**
  对传进来的 `UIView` 截图，生成一个 `UIImage` 并返回。注意这里使用的是 view.layer 来渲染图片内容。

@@ -65,9 +65,9 @@
     _gridView.center = self.view.center;
     
     for (NSInteger i = 0; i < array.count; i++) {
-        QMUIFillButton *btn = [QMUIFillButton buttonWithType:UIButtonTypeCustom];
+        QMUIButton *btn = [QMUIButton buttonWithType:UIButtonTypeCustom];
         [_gridView addSubview:btn];
-        btn.fillColor = [UIColor qmui_randomColor];
+        [btn setBackgroundColor:[UIColor qmui_randomColor]];
         [btn setTitle:array[i] forState:UIControlStateNormal];
         __weak typeof(self) weakSelf = self;
         btn.qmui_tapBlock = ^(__kindof UIControl *sender) {

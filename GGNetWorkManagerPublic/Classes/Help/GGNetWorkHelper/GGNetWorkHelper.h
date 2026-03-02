@@ -6,7 +6,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <YTKNetwork/YTKBaseRequest.h>
+#import <GGYTKNetwork/YTKBaseRequest.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

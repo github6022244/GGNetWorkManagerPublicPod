@@ -1,0 +1,6 @@
+framework module GGAFNetworking {
+  umbrella header "GGAFNetworking-umbrella.h"
+
+  export *
+  module * { export * }
+}

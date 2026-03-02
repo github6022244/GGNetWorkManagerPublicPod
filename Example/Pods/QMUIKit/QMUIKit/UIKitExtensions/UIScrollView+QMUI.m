@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -33,39 +33,43 @@ QMUISynthesizeBOOLProperty(qmuiscroll_hasSetInitialContentInset, setQmuiscroll_h
 + (void)load {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        ExtendImplementationOfNonVoidMethodWithoutArguments([UIScrollView class], @selector(description), NSString *, ^NSString *(UIScrollView *selfObject, NSString *originReturnValue) {
-            originReturnValue = ([NSString stringWithFormat:@"%@, contentInset = %@", originReturnValue, NSStringFromUIEdgeInsets(selfObject.contentInset)]);
-            if (@available(iOS 13.0, *)) {
-                return originReturnValue.mutableCopy;
-            }
-            return originReturnValue;
+        
+        OverrideImplementation([UIScrollView class], @selector(description), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+            return ^NSString *(UIScrollView *selfObject) {
+                // call super
+                NSString *(*originSelectorIMP)(id, SEL);
+                originSelectorIMP = (NSString *(*)(id, SEL))originalIMPProvider();
+                NSString *result = originSelectorIMP(selfObject, originCMD);
+                
+                if (NSThread.isMainThread) {
+                    result = ([NSString stringWithFormat:@"%@, contentInset = %@", result, NSStringFromUIEdgeInsets(selfObject.contentInset)]).mutableCopy;
+                }
+                return result;
+            };
         });
-#ifdef IOS13_SDK_ALLOWED
-        if (@available(iOS 13.0, *)) {
-            if (QMUICMIActivated && AdjustScrollIndicatorInsetsByContentInsetAdjustment) {
-                OverrideImplementation([UIScrollView class], @selector(setContentInsetAdjustmentBehavior:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
-                    return ^(UIScrollView *selfObject, UIScrollViewContentInsetAdjustmentBehavior firstArgv) {
-                        
-                        // call super
-                        void (*originSelectorIMP)(id, SEL, UIScrollViewContentInsetAdjustmentBehavior);
-                        originSelectorIMP = (void (*)(id, SEL, UIScrollViewContentInsetAdjustmentBehavior))originalIMPProvider();
-                        originSelectorIMP(selfObject, originCMD, firstArgv);
-                        
-                        if (firstArgv == UIScrollViewContentInsetAdjustmentNever) {
-                            selfObject.automaticallyAdjustsScrollIndicatorInsets = NO;
-                        } else {
-                            selfObject.automaticallyAdjustsScrollIndicatorInsets = YES;
-                        }
-                    };
-                });
-            }
+        
+        if (QMUICMIActivated && AdjustScrollIndicatorInsetsByContentInsetAdjustment) {
+            OverrideImplementation([UIScrollView class], @selector(setContentInsetAdjustmentBehavior:), ^id(__unsafe_unretained Class originClass, SEL originCMD, IMP (^originalIMPProvider)(void)) {
+                return ^(UIScrollView *selfObject, UIScrollViewContentInsetAdjustmentBehavior firstArgv) {
+                    
+                    // call super
+                    void (*originSelectorIMP)(id, SEL, UIScrollViewContentInsetAdjustmentBehavior);
+                    originSelectorIMP = (void (*)(id, SEL, UIScrollViewContentInsetAdjustmentBehavior))originalIMPProvider();
+                    originSelectorIMP(selfObject, originCMD, firstArgv);
+                    
+                    if (firstArgv == UIScrollViewContentInsetAdjustmentNever) {
+                        selfObject.automaticallyAdjustsScrollIndicatorInsets = NO;
+                    } else {
+                        selfObject.automaticallyAdjustsScrollIndicatorInsets = YES;
+                    }
+                };
+            });
         }
-#endif
     });
 }
 
 - (BOOL)qmui_alreadyAtTop {
-    if (((NSInteger)self.contentOffset.y) == -((NSInteger)self.qmui_contentInset.top)) {
+    if (CGFloatEqualToFloat(self.contentOffset.y, -self.adjustedContentInset.top)) {
         return YES;
     }
     
@@ -77,7 +81,7 @@ QMUISynthesizeBOOLProperty(qmuiscroll_hasSetInitialContentInset, setQmuiscroll_h
         return YES;
     }
     
-    if (((NSInteger)self.contentOffset.y) == ((NSInteger)self.contentSize.height + self.qmui_contentInset.bottom - CGRectGetHeight(self.bounds))) {
+    if (CGFloatEqualToFloat(self.contentOffset.y, self.contentSize.height + self.adjustedContentInset.bottom - CGRectGetHeight(self.bounds))) {
         return YES;
     }
     
@@ -85,11 +89,7 @@ QMUISynthesizeBOOLProperty(qmuiscroll_hasSetInitialContentInset, setQmuiscroll_h
 }
 
 - (UIEdgeInsets)qmui_contentInset {
-    if (@available(iOS 11, *)) {
-        return self.adjustedContentInset;
-    } else {
-        return self.contentInset;
-    }
+    return self.adjustedContentInset;
 }
 
 static char kAssociatedObjectKey_initialContentInset;
@@ -112,14 +112,14 @@ static char kAssociatedObjectKey_initialContentInset;
     if (CGSizeIsEmpty(self.bounds.size)) {
         return NO;
     }
-    BOOL canVerticalScroll = self.contentSize.height + UIEdgeInsetsGetVerticalValue(self.qmui_contentInset) > CGRectGetHeight(self.bounds);
-    BOOL canHorizontalScoll = self.contentSize.width + UIEdgeInsetsGetHorizontalValue(self.qmui_contentInset) > CGRectGetWidth(self.bounds);
+    BOOL canVerticalScroll = self.contentSize.height + UIEdgeInsetsGetVerticalValue(self.adjustedContentInset) > CGRectGetHeight(self.bounds);
+    BOOL canHorizontalScoll = self.contentSize.width + UIEdgeInsetsGetHorizontalValue(self.adjustedContentInset) > CGRectGetWidth(self.bounds);
     return canVerticalScroll || canHorizontalScoll;
 }
 
 - (void)qmui_scrollToTopForce:(BOOL)force animated:(BOOL)animated {
     if (force || (!force && [self qmui_canScroll])) {
-        [self setContentOffset:CGPointMake(-self.qmui_contentInset.left, -self.qmui_contentInset.top) animated:animated];
+        [self setContentOffset:CGPointMake(-self.adjustedContentInset.left, -self.adjustedContentInset.top) animated:animated];
     }
 }
 
@@ -140,7 +140,7 @@ static char kAssociatedObjectKey_initialContentInset;
 
 - (void)qmui_scrollToBottomAnimated:(BOOL)animated {
     if ([self qmui_canScroll]) {
-        [self setContentOffset:CGPointMake(self.contentOffset.x, self.contentSize.height + self.qmui_contentInset.bottom - CGRectGetHeight(self.bounds)) animated:animated];
+        [self setContentOffset:CGPointMake(self.contentOffset.x, self.contentSize.height + self.adjustedContentInset.bottom - CGRectGetHeight(self.bounds)) animated:animated];
     }
 }
 
@@ -158,6 +158,26 @@ static char kAssociatedObjectKey_initialContentInset;
     [UIView qmui_animateWithAnimated:animated duration:.25 delay:0 options:QMUIViewAnimationOptionsCurveOut animations:^{
         self.contentInset = contentInset;
     } completion:nil];
+}
+
+- (void)qmui_scrollToRect:(CGRect)rect atPosition:(QMUIScrollPosition)scrollPosition animated:(BOOL)animated {
+    if (!self.qmui_canScroll) return;
+    BOOL fullyVisible = CGRectContainsRect(self.bounds, CGRectInsetEdges(rect, UIEdgeInsetsMake(0.5, 0.5, 0.5, 0.5)));// 四周故意减小一点点，避免小数点精度误差导致误以为无法 contains
+    if (fullyVisible) return;
+    if (scrollPosition == QMUIScrollPositionNone) {
+        [self scrollRectToVisible:rect animated:animated];
+        return;
+    }
+    CGFloat targetY = self.contentOffset.y;
+    if (scrollPosition == QMUIScrollPositionTop) {
+        targetY = CGRectGetMinY(rect);
+    } else if (scrollPosition == QMUIScrollPositionBottom) {
+        targetY = CGRectGetMaxY(rect) - CGRectGetHeight(self.bounds);
+    } else if (scrollPosition == QMUIScrollPositionMiddle) {
+        targetY = CGRectGetMinY(rect) - (CGRectGetHeight(self.bounds) - CGRectGetHeight(rect)) / 2;
+    }
+    CGFloat offsetY = MIN(self.contentSize.height + self.adjustedContentInset.bottom - CGRectGetHeight(self.bounds), MAX(-self.adjustedContentInset.top, targetY));
+    self.contentOffset = CGPointMake(self.contentOffset.x, offsetY);
 }
 
 @end

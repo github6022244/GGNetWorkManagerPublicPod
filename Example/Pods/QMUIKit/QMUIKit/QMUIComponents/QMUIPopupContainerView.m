@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -22,6 +22,8 @@
 #import "UIWindow+QMUI.h"
 #import "UIBarItem+QMUI.h"
 #import "QMUIAppearance.h"
+#import "CALayer+QMUI.h"
+#import "NSShadow+QMUI.h"
 
 @interface QMUIPopupContainerViewWindow : UIWindow
 
@@ -39,6 +41,10 @@
 @interface QMUIPopupContainerView () {
     UIImageView                     *_imageView;
     UILabel                         *_textLabel;
+    
+    CALayer                         *_backgroundViewMaskLayer;
+    CAShapeLayer                    *_copiedBackgroundLayer;
+    CALayer                         *_copiedArrowImageLayer;
 }
 
 @property(nonatomic, strong) QMUIPopupContainerViewWindow *popupWindow;
@@ -94,9 +100,40 @@
     return result;
 }
 
+- (void)setBackgroundView:(UIView *)backgroundView {
+    if (_backgroundView && _backgroundView != backgroundView) {
+        [_backgroundView removeFromSuperview];
+    }
+    _backgroundView = backgroundView;
+    if (backgroundView) {
+        [self insertSubview:backgroundView atIndex:0];
+        // backgroundView 必须盖在 _backgroundLayer、_arrowImageView 上面，否则背景色、阴影、箭头图片都会盖在 backgroundView 上方，影响表现
+        [self sendSubviewToBack:_arrowImageView];
+        [self.layer qmui_sendSublayerToBack:_backgroundLayer];
+        [self.layer qmui_sendSublayerToBack:_borderLayer];
+        if (!_backgroundViewMaskLayer) {
+            _copiedBackgroundLayer = [CAShapeLayer layer];
+            [_copiedBackgroundLayer qmui_removeDefaultAnimations];
+            _copiedBackgroundLayer.fillColor = UIColor.blackColor.CGColor;// 这个 layer 是作为 mask 使用的，所以必须完整填充不透明的颜色，否则会影响 mask 效果
+            
+            _copiedArrowImageLayer = [CALayer layer];
+            [_copiedArrowImageLayer qmui_removeDefaultAnimations];
+            
+            _backgroundViewMaskLayer = [CALayer layer];
+            [_backgroundViewMaskLayer qmui_removeDefaultAnimations];
+            [_backgroundViewMaskLayer addSublayer:_copiedBackgroundLayer];
+            [_backgroundViewMaskLayer addSublayer:_copiedArrowImageLayer];
+        }
+        backgroundView.layer.mask = _backgroundViewMaskLayer;
+    }
+    // 存在 backgroundView 则隐藏原始的箭头，避免在 backgroundView 背后影响显示
+    _arrowImageView.hidden = backgroundView || !self.arrowImage;
+}
+
 - (void)setBackgroundColor:(UIColor *)backgroundColor {
     _backgroundColor = backgroundColor;
     _backgroundLayer.fillColor = _backgroundColor.CGColor;
+    _arrowImageView.tintColor = backgroundColor;
 }
 
 - (void)setMaskViewBackgroundColor:(UIColor *)maskViewBackgroundColor {
@@ -106,19 +143,19 @@
     }
 }
 
-- (void)setShadowColor:(UIColor *)shadowColor {
-    _shadowColor = shadowColor;
-    _backgroundLayer.shadowColor = shadowColor.CGColor;
+- (void)setShadow:(NSShadow *)shadow {
+    _shadow = shadow;
+    _borderLayer.qmui_shadow = shadow;
 }
 
 - (void)setBorderColor:(UIColor *)borderColor {
     _borderColor = borderColor;
-    _backgroundLayer.strokeColor = borderColor.CGColor;
+    _borderLayer.strokeColor = borderColor.CGColor;
 }
 
 - (void)setBorderWidth:(CGFloat)borderWidth {
     _borderWidth = borderWidth;
-    _backgroundLayer.lineWidth = _borderWidth;
+    _borderLayer.lineWidth = _borderWidth;
 }
 
 - (void)setCornerRadius:(CGFloat)cornerRadius {
@@ -129,87 +166,106 @@
 - (void)setHighlighted:(BOOL)highlighted {
     [super setHighlighted:highlighted];
     if (self.highlightedBackgroundColor) {
-        _backgroundLayer.fillColor = highlighted ? self.highlightedBackgroundColor.CGColor : self.backgroundColor.CGColor;
+        UIColor *color = highlighted ? self.highlightedBackgroundColor : self.backgroundColor;
+        _backgroundLayer.fillColor = color.CGColor;
+        _arrowImageView.tintColor = color;
+    }
+}
+
+- (void)setPreferLayoutAlignment:(QMUIPopupContainerViewLayoutAlignment)preferLayoutAlignment {
+    _preferLayoutAlignment = preferLayoutAlignment;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
+    }
+}
+
+- (void)setDistanceBetweenSource:(CGFloat)distanceBetweenSource {
+    _distanceBetweenSource = distanceBetweenSource;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
     }
 }
 
 - (CGSize)sizeThatFits:(CGSize)size {
     CGSize contentLimitSize = [self contentSizeInSize:size];
-    CGSize contentSize = [self sizeThatFitsInContentView:contentLimitSize];
+    CGSize contentSize = CGSizeZero;
+    if (self.contentViewSizeThatFitsBlock) {
+        contentSize = self.contentViewSizeThatFitsBlock(contentLimitSize);
+    } else {
+        contentSize = [self sizeThatFitsInContentView:contentLimitSize];
+    }
     CGSize resultSize = [self sizeWithContentSize:contentSize sizeThatFits:size];
     return resultSize;
 }
 
 - (void)layoutSubviews {
     [super layoutSubviews];
+    BOOL isUsingArrowImage = !!self.arrowImage;
+    CGAffineTransform arrowImageTransform = CGAffineTransformIdentity;
+    CGPoint arrowImagePosition = CGPointZero;
     CGSize arrowSize = self.arrowSizeAuto;
-    CGRect roundedRect = CGRectMake(self.borderWidth / 2.0 + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight ? arrowSize.width : 0),
-                                    self.borderWidth / 2.0 + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow ? arrowSize.height : 0),
-                                    CGRectGetWidth(self.bounds) - self.borderWidth - self.arrowSpacingInHorizontal,
-                                    CGRectGetHeight(self.bounds) - self.borderWidth - self.arrowSpacingInVertical);
-    CGFloat cornerRadius = self.cornerRadius;
-    
-    CGPoint leftTopArcCenter = CGPointMake(CGRectGetMinX(roundedRect) + cornerRadius, CGRectGetMinY(roundedRect) + cornerRadius);
-    CGPoint leftBottomArcCenter = CGPointMake(leftTopArcCenter.x, CGRectGetMaxY(roundedRect) - cornerRadius);
-    CGPoint rightTopArcCenter = CGPointMake(CGRectGetMaxX(roundedRect) - cornerRadius, leftTopArcCenter.y);
-    CGPoint rightBottomArcCenter = CGPointMake(rightTopArcCenter.x, leftBottomArcCenter.y);
-    
-    // 从左上角逆时针绘制
-    UIBezierPath *path = [UIBezierPath bezierPath];
-    [path moveToPoint:CGPointMake(leftTopArcCenter.x, CGRectGetMinY(roundedRect))];
-    [path addArcWithCenter:leftTopArcCenter radius:cornerRadius startAngle:M_PI * 1.5 endAngle:M_PI clockwise:NO];
-    
-    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight) {
-        // 箭头向左
-        [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), _arrowMinY)];
-        [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect) - arrowSize.width, _arrowMinY + arrowSize.height / 2)];
-        [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), _arrowMinY + arrowSize.height)];
+    if (isUsingArrowImage) {
+        switch (self.currentLayoutDirection) {
+            case QMUIPopupContainerViewLayoutDirectionRight: {
+                arrowImageTransform = CGAffineTransformMakeRotation(AngleWithDegrees(90));
+                arrowImagePosition = CGPointMake(arrowSize.width / 2, _arrowMinY + arrowSize.height / 2);
+            }
+                break;
+            case QMUIPopupContainerViewLayoutDirectionAbove: {
+                arrowImagePosition = CGPointMake(_arrowMinX + arrowSize.width / 2, CGRectGetHeight(self.bounds) - arrowSize.height / 2);
+            }
+                break;
+            case QMUIPopupContainerViewLayoutDirectionLeft: {
+                arrowImageTransform = CGAffineTransformMakeRotation(AngleWithDegrees(-90));
+                arrowImagePosition = CGPointMake(CGRectGetWidth(self.bounds) - arrowSize.width / 2, _arrowMinY + arrowSize.height / 2);
+            }
+                break;
+            case QMUIPopupContainerViewLayoutDirectionBelow: {
+                arrowImageTransform = CGAffineTransformMakeRotation(AngleWithDegrees(-180));
+                arrowImagePosition = CGPointMake(_arrowMinX + arrowSize.width / 2, arrowSize.height / 2);
+            }
+                break;
+            default:
+                break;
+        }
+        _arrowImageView.transform = arrowImageTransform;
+        _arrowImageView.center = arrowImagePosition;
     }
     
-    [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), leftBottomArcCenter.y)];
-    [path addArcWithCenter:leftBottomArcCenter radius:cornerRadius startAngle:M_PI endAngle:M_PI * 0.5 clockwise:NO];
+    UIBezierPath *borderPath = [self generatePathForBorder:YES];
+    _borderLayer.path = borderPath.CGPath;
+    _borderLayer.shadowPath = borderPath.CGPath;
+    _borderLayer.frame = self.bounds;
     
-    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionAbove) {
-        // 箭头向下
-        [path addLineToPoint:CGPointMake(_arrowMinX, CGRectGetMaxY(roundedRect))];
-        [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width / 2, CGRectGetMaxY(roundedRect) + arrowSize.height)];
-        [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width, CGRectGetMaxY(roundedRect))];
-    }
-    
-    [path addLineToPoint:CGPointMake(rightBottomArcCenter.x, CGRectGetMaxY(roundedRect))];
-    [path addArcWithCenter:rightBottomArcCenter radius:cornerRadius startAngle:M_PI * 0.5 endAngle:0.0 clockwise:NO];
-    
-    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionLeft) {
-        // 箭头向右
-        [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), _arrowMinY + arrowSize.height)];
-        [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect) + arrowSize.width, _arrowMinY + arrowSize.height / 2)];
-        [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), _arrowMinY)];
-    }
-    
-    [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), rightTopArcCenter.y)];
-    [path addArcWithCenter:rightTopArcCenter radius:cornerRadius startAngle:0.0 endAngle:M_PI * 1.5 clockwise:NO];
-    
-    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow) {
-        // 箭头向上
-        [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width, CGRectGetMinY(roundedRect))];
-        [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width / 2, CGRectGetMinY(roundedRect) - arrowSize.height)];
-        [path addLineToPoint:CGPointMake(_arrowMinX, CGRectGetMinY(roundedRect))];
-    }
-    [path closePath];
-    
-    _backgroundLayer.path = path.CGPath;
-    _backgroundLayer.shadowPath = path.CGPath;
+    UIBezierPath *backgroundPath = [self generatePathForBorder:NO];
+    _backgroundLayer.path = backgroundPath.CGPath;
     _backgroundLayer.frame = self.bounds;
+    
+    if (self.backgroundView) {
+        self.backgroundView.frame = self.bounds;
+        _backgroundViewMaskLayer.frame = self.bounds;
+        
+        _copiedBackgroundLayer.path = _backgroundLayer.path;
+        _copiedBackgroundLayer.frame = _backgroundLayer.frame;
+        
+        _copiedArrowImageLayer.bounds = _arrowImageView.bounds;
+        _copiedArrowImageLayer.affineTransform = arrowImageTransform;
+        _copiedArrowImageLayer.position = arrowImagePosition;
+        _copiedArrowImageLayer.contents = (id)_arrowImageView.image.CGImage;
+        _copiedArrowImageLayer.contentsScale = _arrowImageView.image.scale;
+    }
     
     [self layoutDefaultSubviews];
 }
 
 - (void)layoutDefaultSubviews {
     self.contentView.frame = CGRectMake(
-                                        self.borderWidth + self.contentEdgeInsets.left + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight ? self.arrowSizeAuto.width : 0),
-                                        self.borderWidth + self.contentEdgeInsets.top + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow ? self.arrowSizeAuto.height : 0),
-                                        CGRectGetWidth(self.bounds) - self.borderWidth * 2 - UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) - self.arrowSpacingInHorizontal,
-                                        CGRectGetHeight(self.bounds) - self.borderWidth * 2 - UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) - self.arrowSpacingInVertical);
+                                        self.contentEdgeInsets.left + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight ? self.arrowSizeAuto.width : self.borderWidth),
+                                        self.contentEdgeInsets.top + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow ? self.arrowSizeAuto.height : self.borderWidth),
+                                        CGRectGetWidth(self.bounds) - self.borderWidth - UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) - self.arrowSpacingInHorizontal - (self.arrowSpacingInHorizontal > 0 ? 0 : self.borderWidth),
+                                        CGRectGetHeight(self.bounds) - self.borderWidth - UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) - self.arrowSpacingInVertical - (self.arrowSpacingInVertical > 0 ? 0 : self.borderWidth));
+    // 让点击响应区域与肉眼看到的圆角矩形保持一致，否则 contentView 内部的 subviews 就算要扩大点击区域也会受限制
+    self.contentView.qmui_outsideEdge = UIEdgeInsetsMake(MIN(0, -self.contentEdgeInsets.top), MIN(0, -self.contentEdgeInsets.left), MIN(0, -self.contentEdgeInsets.bottom), MIN(0, -self.contentEdgeInsets.right));
     // contentView的圆角取一个比整个path的圆角小的最大值（极限情况下如果self.contentEdgeInsets.left比self.cornerRadius还大，那就意味着contentView不需要圆角了）
     // 这么做是为了尽量去掉contentView对内容不必要的裁剪，以免有些东西被裁剪了看不到
     CGFloat contentViewCornerRadius = fabs(MIN(CGRectGetMinX(self.contentView.frame) - self.cornerRadius, 0));
@@ -225,12 +281,12 @@
         } else if (self.contentMode == UIViewContentModeBottom) {
             _imageView.frame = CGRectSetY(_imageView.frame, CGRectGetHeight(self.contentView.bounds) - self.imageEdgeInsets.bottom - CGRectGetHeight(_imageView.frame));
         } else {
-            _imageView.frame = CGRectSetY(_imageView.frame, self.imageEdgeInsets.top + CGFloatGetCenter(CGRectGetHeight(self.contentView.bounds), CGRectGetHeight(_imageView.frame)));
+            _imageView.frame = CGRectSetY(_imageView.frame, self.imageEdgeInsets.top + CGFloatGetCenter(CGRectGetHeight(self.contentView.bounds) - UIEdgeInsetsGetVerticalValue(self.imageEdgeInsets), CGRectGetHeight(_imageView.frame)));
         }
     }
     if (isTextLabelShowing) {
         CGFloat textLabelMinX = (isImageViewShowing ? ceil(CGRectGetMaxX(_imageView.frame) + self.imageEdgeInsets.right) : 0) + self.textEdgeInsets.left;
-        CGSize textLabelLimitSize = CGSizeMake(ceil(CGRectGetWidth(self.contentView.bounds) - textLabelMinX), ceil(CGRectGetHeight(self.contentView.bounds) - self.textEdgeInsets.top - self.textEdgeInsets.bottom));
+        CGSize textLabelLimitSize = CGSizeMake(ceil(CGRectGetWidth(self.contentView.bounds) - textLabelMinX - self.textEdgeInsets.right), ceil(CGRectGetHeight(self.contentView.bounds) - UIEdgeInsetsGetVerticalValue(self.textEdgeInsets)));
         CGSize textLabelSize = [_textLabel sizeThatFits:textLabelLimitSize];
         _textLabel.frame = CGRectMake(textLabelMinX, 0, textLabelLimitSize.width, ceil(textLabelSize.height));
         if (self.contentMode == UIViewContentModeTop) {
@@ -238,13 +294,87 @@
         } else if (self.contentMode == UIViewContentModeBottom) {
             _textLabel.frame = CGRectSetY(_textLabel.frame, CGRectGetHeight(self.contentView.bounds) - self.textEdgeInsets.bottom - CGRectGetHeight(_textLabel.frame));
         } else {
-            _textLabel.frame = CGRectSetY(_textLabel.frame, self.textEdgeInsets.top + CGFloatGetCenter(CGRectGetHeight(self.contentView.bounds), CGRectGetHeight(_textLabel.frame)));
+            _textLabel.frame = CGRectSetY(_textLabel.frame, self.textEdgeInsets.top + CGFloatGetCenter(CGRectGetHeight(self.contentView.bounds) - UIEdgeInsetsGetVerticalValue(self.textEdgeInsets), CGRectGetHeight(_textLabel.frame)));
         }
     }
 }
 
+- (UIBezierPath *)generatePathForBorder:(BOOL)forBorder {
+    BOOL isUsingArrowImage = !!self.arrowImage;
+    CGSize arrowSize = self.arrowSizeAuto;
+    CGFloat offset = forBorder ? self.borderWidth / 2.0 : self.borderWidth;
+    CGRect roundedRect = CGRectMake(offset + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight ? arrowSize.width - self.borderWidth : 0),
+                                    offset + (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow ? arrowSize.height - self.borderWidth : 0),
+                                    CGRectGetWidth(self.bounds) - offset * 2 - self.arrowSpacingInHorizontal + (self.arrowSpacingInHorizontal > 0 ? self.borderWidth : 0),
+                                    CGRectGetHeight(self.bounds) - offset * 2 - self.arrowSpacingInVertical + (self.arrowSpacingInVertical > 0 ? self.borderWidth : 0));
+    CGFloat cornerRadius = forBorder ? self.cornerRadius : (self.cornerRadius - self.borderWidth / 2.0);
+    
+    CGPoint leftTopArcCenter = CGPointMake(CGRectGetMinX(roundedRect) + cornerRadius, CGRectGetMinY(roundedRect) + cornerRadius);
+    CGPoint leftBottomArcCenter = CGPointMake(leftTopArcCenter.x, CGRectGetMaxY(roundedRect) - cornerRadius);
+    CGPoint rightTopArcCenter = CGPointMake(CGRectGetMaxX(roundedRect) - cornerRadius, leftTopArcCenter.y);
+    CGPoint rightBottomArcCenter = CGPointMake(rightTopArcCenter.x, leftBottomArcCenter.y);
+    
+    // 从左上角逆时针绘制
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    [path moveToPoint:CGPointMake(leftTopArcCenter.x, CGRectGetMinY(roundedRect))];
+    [path addArcWithCenter:leftTopArcCenter radius:cornerRadius startAngle:M_PI * 1.5 endAngle:M_PI clockwise:NO];
+    
+    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight) {
+        // 箭头向左
+        if (!isUsingArrowImage) {
+            [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), _arrowMinY)];
+            [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect) - arrowSize.width, _arrowMinY + arrowSize.height / 2)];
+            [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), _arrowMinY + arrowSize.height)];
+        }
+    }
+    
+    [path addLineToPoint:CGPointMake(CGRectGetMinX(roundedRect), leftBottomArcCenter.y)];
+    [path addArcWithCenter:leftBottomArcCenter radius:cornerRadius startAngle:M_PI endAngle:M_PI * 0.5 clockwise:NO];
+    
+    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionAbove) {
+        // 箭头向下
+        if (!isUsingArrowImage) {
+            [path addLineToPoint:CGPointMake(_arrowMinX, CGRectGetMaxY(roundedRect))];
+            [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width / 2, CGRectGetMaxY(roundedRect) + arrowSize.height)];
+            [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width, CGRectGetMaxY(roundedRect))];
+        }
+    }
+    
+    [path addLineToPoint:CGPointMake(rightBottomArcCenter.x, CGRectGetMaxY(roundedRect))];
+    [path addArcWithCenter:rightBottomArcCenter radius:cornerRadius startAngle:M_PI * 0.5 endAngle:0.0 clockwise:NO];
+    
+    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionLeft) {
+        // 箭头向右
+        if (!isUsingArrowImage) {
+            [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), _arrowMinY + arrowSize.height)];
+            [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect) + arrowSize.width, _arrowMinY + arrowSize.height / 2)];
+            [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), _arrowMinY)];
+        }
+    }
+    
+    [path addLineToPoint:CGPointMake(CGRectGetMaxX(roundedRect), rightTopArcCenter.y)];
+    [path addArcWithCenter:rightTopArcCenter radius:cornerRadius startAngle:0.0 endAngle:M_PI * 1.5 clockwise:NO];
+    
+    if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow) {
+        // 箭头向上
+        if (!isUsingArrowImage) {
+            [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width, CGRectGetMinY(roundedRect))];
+            [path addLineToPoint:CGPointMake(_arrowMinX + arrowSize.width / 2, CGRectGetMinY(roundedRect) - arrowSize.height)];
+            [path addLineToPoint:CGPointMake(_arrowMinX, CGRectGetMinY(roundedRect))];
+        }
+    }
+    [path closePath];
+    return path;
+}
+
 - (void)setSourceBarItem:(__kindof UIBarItem *)sourceBarItem {
+    if (_sourceBarItem && _sourceBarItem != sourceBarItem) {
+        _sourceBarItem.qmui_viewLayoutDidChangeBlock = nil;
+    }
+    
     _sourceBarItem = sourceBarItem;
+    if (!_sourceBarItem) return;
+    
     __weak __typeof(self)weakSelf = self;
     // 每次都要重新定义 block，否则当不同的 popup 在同一个 sourceBarItem 显示，这个 block 内部得到的 weakSelf 可能是前一次的
     sourceBarItem.qmui_viewLayoutDidChangeBlock = ^(__kindof UIBarItem * _Nonnull item, UIView * _Nullable view) {
@@ -259,7 +389,13 @@
 }
 
 - (void)setSourceView:(__kindof UIView *)sourceView {
+    if (_sourceView && _sourceView != sourceView) {
+        _sourceView.qmui_frameDidChangeBlock = nil;
+    }
+    
     _sourceView = sourceView;
+    if (!_sourceView) return;
+    
     __weak __typeof(self)weakSelf = self;
     sourceView.qmui_frameDidChangeBlock = ^(__kindof UIView * _Nonnull view, CGRect precedingFrame) {
         if (!view.window || !weakSelf.superview) return;
@@ -277,6 +413,16 @@
     }
 }
 
+- (void)setNeedsUpdateLayout {
+    if (_shouldInvalidateLayout) return;
+    _shouldInvalidateLayout = YES;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->_shouldInvalidateLayout) {
+            [self updateLayout];
+        }
+    });
+}
+
 - (void)updateLayout {
     // call setter to layout immediately
     if (self.sourceBarItem) {
@@ -286,6 +432,7 @@
     } else {
         self.sourceRect = self.sourceRect;
     }
+    _shouldInvalidateLayout = NO;
 }
 
 // 参数 targetRect 在 window 模式下是 window 的坐标系内的，如果是 subview 模式下则是 superview 坐标系内的
@@ -303,13 +450,17 @@
         CGSize result = CGSizeZero;
         if (self.isVerticalLayoutDirection) {
             result.width = CGRectGetWidth(containerRect) - UIEdgeInsetsGetHorizontalValue(self.safetyMarginsAvoidSafeAreaInsets);
-        } else {
-            result.width = CGFLOAT_MAX;
+        } else if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionLeft) {
+            result.width = CGRectGetMinX(targetRect) - self.distanceBetweenSource - self.safetyMarginsAvoidSafeAreaInsets.left;
+        } else if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionRight) {
+            result.width = CGRectGetWidth(containerRect) - self.safetyMarginsAvoidSafeAreaInsets.right - self.distanceBetweenSource - CGRectGetMaxX(targetRect);
         }
         if (self.isHorizontalLayoutDirection) {
             result.height = CGRectGetHeight(containerRect) - UIEdgeInsetsGetVerticalValue(self.safetyMarginsAvoidSafeAreaInsets);
-        } else {
-            result.height = CGFLOAT_MAX;
+        } else if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionAbove) {
+            result.height = CGRectGetMinY(targetRect) - self.distanceBetweenSource - self.safetyMarginsAvoidSafeAreaInsets.top;
+        } else if (self.currentLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow) {
+            result.height = CGRectGetHeight(containerRect) - self.safetyMarginsAvoidSafeAreaInsets.bottom - self.distanceBetweenSource - CGRectGetMaxY(targetRect);
         }
         result = CGSizeMake(MIN(self.maximumWidth, result.width), MIN(self.maximumHeight, result.height));
         return result;
@@ -324,14 +475,36 @@
     
     if (self.isVerticalLayoutDirection) {
         // 保护tips最往左只能到达self.safetyMarginsAvoidSafeAreaInsets.left
-        CGFloat a = CGRectGetMidX(targetRect) - tipSize.width / 2;
+        CGFloat a = 0;
+        switch (self.preferLayoutAlignment) {
+            case QMUIPopupContainerViewLayoutAlignmentLeading:
+                a = CGRectGetMinX(targetRect);
+                break;
+            case QMUIPopupContainerViewLayoutAlignmentTrailing:
+                a = CGRectGetMaxX(targetRect) - tipSize.width;
+                break;
+            default:
+                a = CGRectGetMidX(targetRect) - tipSize.width / 2;
+                break;
+        }
         tipMinX = MAX(CGRectGetMinX(containerRect) + self.safetyMarginsAvoidSafeAreaInsets.left, a);
         
         CGFloat tipMaxX = tipMinX + tipSize.width;
         if (tipMaxX + self.safetyMarginsAvoidSafeAreaInsets.right > CGRectGetMaxX(containerRect)) {
             // 右边超出了
             // 先尝试把右边超出的部分往左边挪，看是否会令左边到达临界点
-            CGFloat distanceCanMoveToLeft = tipMaxX - (CGRectGetMaxX(containerRect) - self.safetyMarginsAvoidSafeAreaInsets.right);
+            CGFloat distanceCanMoveToLeft = 0;
+            if (self.preferLayoutAlignment == QMUIPopupContainerViewLayoutAlignmentLeading && self.usesOppositeLayoutAlignmentIfNeeded) {
+                distanceCanMoveToLeft = tipMaxX - MIN(CGRectGetMaxX(targetRect), CGRectGetMaxX(containerRect) - self.safetyMarginsOfSuperview.right);// targetRect 可能溢出屏幕外，需要保护
+                if (tipMinX - distanceCanMoveToLeft >= CGRectGetMinX(containerRect) + self.safetyMarginsAvoidSafeAreaInsets.left) {
+                    // 可以往左边挪，走下面的统一逻辑
+                } else {
+                    // 不可以往左边挪，那就算了按原始 alignment 来对待
+                    distanceCanMoveToLeft = tipMaxX - (CGRectGetMaxX(containerRect) - self.safetyMarginsAvoidSafeAreaInsets.right);
+                }
+            } else {
+                distanceCanMoveToLeft = tipMaxX - (CGRectGetMaxX(containerRect) - self.safetyMarginsAvoidSafeAreaInsets.right);
+            }
             if (tipMinX - distanceCanMoveToLeft >= CGRectGetMinX(containerRect) + self.safetyMarginsAvoidSafeAreaInsets.left) {
                 // 可以往左边挪
                 tipMinX -= distanceCanMoveToLeft;
@@ -387,7 +560,9 @@
         // 调整浮层里的箭头的位置
         CGPoint targetRectCenter = CGPointGetCenterWithRect(targetRect);
         CGFloat selfMidX = targetRectCenter.x - CGRectGetMinX(self.frame);
-        _arrowMinX = selfMidX - self.arrowSizeAuto.width / 2;
+        CGFloat arrowMinimumMinX = self.cornerRadius;
+        CGFloat arrowMaximumMinX = CGRectGetWidth(self.bounds) - self.cornerRadius - self.arrowSize.width;
+        _arrowMinX = MIN(arrowMaximumMinX, MAX(arrowMinimumMinX, selfMidX - self.arrowSizeAuto.width / 2));
     } else {
         // 保护tips最往上只能到达self.safetyMarginsAvoidSafeAreaInsets.top
         CGFloat a = CGRectGetMidY(targetRect) - tipSize.height / 2;
@@ -538,28 +713,43 @@
     
     if (animated) {
         if (isShowingByWindowMode) {
-            self.popupWindow.alpha = 0;
+            self.popupWindow.rootViewController.view.alpha = 0;// 请操作 vc.view.alpha 而不是 window.alpha，如果是后者，会导致 popup 显示出来前有一小段时间无法屏蔽界面的触摸事件，从而引发一些状态混乱问题
         } else {
             self.alpha = 0;
         }
         self.layer.transform = CATransform3DMakeScale(0.98, 0.98, 1);
-        [UIView animateWithDuration:0.4 delay:0 usingSpringWithDamping:0.3 initialSpringVelocity:12 options:UIViewAnimationOptionCurveLinear animations:^{
-            self.layer.transform = CATransform3DMakeScale(1, 1, 1);
-        } completion:^(BOOL finished) {
-            if (completion) {
-                completion(finished);
-            }
-        }];
-        [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
-            if (isShowingByWindowMode) {
-                self.popupWindow.alpha = 1;
-            } else {
-                self.alpha = 1;
-            }
-        } completion:nil];
+        if (self.showingAnimationBlock) {
+            self.showingAnimationBlock(^{
+                self.layer.transform = CATransform3DMakeScale(1, 1, 1);
+                if (isShowingByWindowMode) {
+                    self.popupWindow.rootViewController.view.alpha = 1;
+                } else {
+                    self.alpha = 1;
+                }
+            }, ^(BOOL finished) {
+                if (completion) {
+                    completion(finished);
+                }
+            }, isShowingByWindowMode, self.popupWindow.rootViewController.view, self);
+        } else {
+            [UIView animateWithDuration:0.4 delay:0 usingSpringWithDamping:0.3 initialSpringVelocity:12 options:UIViewAnimationOptionCurveLinear animations:^{
+                self.layer.transform = CATransform3DMakeScale(1, 1, 1);
+            } completion:^(BOOL finished) {
+                if (completion) {
+                    completion(finished);
+                }
+            }];
+            [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
+                if (isShowingByWindowMode) {
+                    self.popupWindow.rootViewController.view.alpha = 1;
+                } else {
+                    self.alpha = 1;
+                }
+            } completion:nil];
+        }
     } else {
         if (isShowingByWindowMode) {
-            self.popupWindow.alpha = 1;
+            self.popupWindow.rootViewController.view.alpha = 1;
         } else {
             self.alpha = 1;
         }
@@ -581,15 +771,25 @@
     BOOL isShowingByWindowMode = !!self.popupWindow;
     
     if (animated) {
-        [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
+        void (^a)(void) = ^void(void) {
             if (isShowingByWindowMode) {
-                self.popupWindow.alpha = 0;
+                self.popupWindow.rootViewController.view.alpha = 0;
             } else {
                 self.alpha = 0;
             }
-        } completion:^(BOOL finished) {
+        };
+        void (^c)(BOOL finished) = ^void(BOOL finished) {
             [self hideCompletionWithWindowMode:isShowingByWindowMode completion:completion];
-        }];
+        };
+        if (self.hidingAnimationBlock) {
+            self.hidingAnimationBlock(a, c, isShowingByWindowMode, self.popupWindow.rootViewController.view, self);
+        } else {
+            [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
+                a();
+            } completion:^(BOOL finished) {
+                c(finished);
+            }];
+        }
     } else {
         [self hideCompletionWithWindowMode:isShowingByWindowMode completion:completion];
     }
@@ -654,21 +854,19 @@
 
 /// 根据一个给定的大小（包含箭头，不含 distanceBetweenSource ），计算出符合这个大小的内容大小（去掉箭头和白色内部的 contentEdgeInsets 后）
 - (CGSize)contentSizeInSize:(CGSize)size {
-    CGSize contentSize = CGSizeMake(size.width - UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) - self.borderWidth * 2 - self.arrowSpacingInHorizontal, size.height - UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) - self.borderWidth * 2 - self.arrowSpacingInVertical);
+    CGSize contentSize = CGSizeMake(size.width - UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) - self.borderWidth - self.arrowSpacingInHorizontal - (self.arrowSpacingInHorizontal > 0 ? 0 : self.borderWidth), size.height - UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) - self.borderWidth - self.arrowSpacingInVertical - (self.arrowSpacingInVertical > 0 ? 0 : self.borderWidth));
     return contentSize;
 }
 
 /// 根据内容大小和外部限制的大小，计算出合适的self size（包含箭头）
 - (CGSize)sizeWithContentSize:(CGSize)contentSize sizeThatFits:(CGSize)sizeThatFits {
-    CGFloat resultWidth = contentSize.width + UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) + self.borderWidth * 2 + self.arrowSpacingInHorizontal;
-    resultWidth = MIN(resultWidth, sizeThatFits.width);// 宽度不能超过传进来的size.width
+    CGFloat resultWidth = contentSize.width + UIEdgeInsetsGetHorizontalValue(self.contentEdgeInsets) + self.borderWidth + self.arrowSpacingInHorizontal + (self.arrowSpacingInHorizontal > 0 ? 0 : self.borderWidth);// 当存在箭头时，箭头会叠在 border 上，所以这里只加一条边
     resultWidth = MAX(MIN(resultWidth, self.maximumWidth), self.minimumWidth);// 宽度必须在最小值和最大值之间
-    resultWidth = ceil(resultWidth);
+    resultWidth = flat(resultWidth);
     
-    CGFloat resultHeight = contentSize.height + UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) + self.borderWidth * 2 + self.arrowSpacingInVertical;
-    resultHeight = MIN(resultHeight, sizeThatFits.height);
+    CGFloat resultHeight = contentSize.height + UIEdgeInsetsGetVerticalValue(self.contentEdgeInsets) + self.borderWidth + self.arrowSpacingInVertical + (self.arrowSpacingInVertical > 0 ? 0 : self.borderWidth);// 当存在箭头时，箭头会叠在 border 上，所以这里只加一条边
     resultHeight = MAX(MIN(resultHeight, self.maximumHeight), self.minimumHeight);
-    resultHeight = ceil(resultHeight);
+    resultHeight = flat(resultHeight);
     
     return CGSizeMake(resultWidth, resultHeight);
 }
@@ -679,6 +877,34 @@
 
 - (BOOL)isVerticalLayoutDirection {
     return self.preferLayoutDirection == QMUIPopupContainerViewLayoutDirectionAbove || self.preferLayoutDirection == QMUIPopupContainerViewLayoutDirectionBelow;
+}
+
+- (void)setArrowImage:(UIImage *)arrowImage {
+    _arrowImage = arrowImage;
+    if (arrowImage) {
+        _arrowSize = arrowImage.size;
+        
+        if (!_arrowImageView) {
+            _arrowImageView = UIImageView.new;
+            _arrowImageView.tintColor = self.backgroundColor;
+            [self addSubview:_arrowImageView];
+        }
+        _arrowImageView.hidden = !!self.backgroundView;// 存在 backgroundView 时不要显示箭头（但依然要设置 _arrowImageView 的内容，以供 mask 用）
+        _arrowImageView.image = arrowImage;
+        _arrowImageView.bounds = CGRectMakeWithSize(arrowImage.size);
+    } else {
+        _arrowImageView.hidden = YES;
+        _arrowImageView.image = nil;
+    }
+}
+
+- (void)setArrowSize:(CGSize)arrowSize {
+    if (!self.arrowImage) {
+        _arrowSize = arrowSize;
+        if (self.isShowing) {
+            [self setNeedsUpdateLayout];
+        }
+    }
 }
 
 // self.arrowSize 规定的是上下箭头的宽高，如果 tip 布局在左右的话，arrowSize 的宽高则调转
@@ -694,14 +920,42 @@
     return self.isVerticalLayoutDirection ? self.arrowSizeAuto.height : 0;
 }
 
+- (void)setMinimumWidth:(CGFloat)minimumWidth {
+    _minimumWidth = minimumWidth;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
+    }
+}
+
+- (void)setMaximumWidth:(CGFloat)maximumWidth {
+    _maximumWidth = maximumWidth;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
+    }
+}
+
+- (void)setMinimumHeight:(CGFloat)minimumHeight {
+    _minimumHeight = minimumHeight;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
+    }
+}
+
+- (void)setMaximumHeight:(CGFloat)maximumHeight {
+    _maximumHeight = maximumHeight;
+    if (self.isShowing) {
+        [self setNeedsUpdateLayout];
+    }
+}
+
 - (UIEdgeInsets)safetyMarginsAvoidSafeAreaInsets {
     UIEdgeInsets result = self.safetyMarginsOfSuperview;
     if (self.isHorizontalLayoutDirection) {
-        result.left += self.superview.qmui_safeAreaInsets.left;
-        result.right += self.superview.qmui_safeAreaInsets.right;
+        result.left += self.superview.safeAreaInsets.left;
+        result.right += self.superview.safeAreaInsets.right;
     } else {
-        result.top += self.superview.qmui_safeAreaInsets.top;
-        result.bottom += self.superview.qmui_safeAreaInsets.bottom;
+        result.top += self.superview.safeAreaInsets.top;
+        result.bottom += self.superview.safeAreaInsets.bottom;
     }
     return result;
 }
@@ -711,10 +965,13 @@
 @implementation QMUIPopupContainerView (UISubclassingHooks)
 
 - (void)didInitialize {
+    _borderLayer = [CAShapeLayer layer];
+    [_borderLayer qmui_removeDefaultAnimations];
+    _borderLayer.fillColor = UIColor.clearColor.CGColor;
+    [self.layer addSublayer:_borderLayer];
+    
     _backgroundLayer = [CAShapeLayer layer];
-    _backgroundLayer.shadowOffset = CGSizeMake(0, 2);
-    _backgroundLayer.shadowOpacity = 1;
-    _backgroundLayer.shadowRadius = 10;
+    [_backgroundLayer qmui_removeDefaultAnimations];
     [self.layer addSublayer:_backgroundLayer];
     
     _contentView = [[UIView alloc] init];
@@ -737,19 +994,17 @@
     BOOL isImageViewShowing = [self isSubviewShowing:_imageView];
     if (isImageViewShowing) {
         CGSize imageViewSize = [_imageView sizeThatFits:size];
-        resultSize.width += ceil(imageViewSize.width) + self.imageEdgeInsets.left;
-        resultSize.height += ceil(imageViewSize.height) + self.imageEdgeInsets.top;
+        resultSize.width += ceil(imageViewSize.width) + UIEdgeInsetsGetHorizontalValue(self.imageEdgeInsets);
+        resultSize.height += ceil(imageViewSize.height) + UIEdgeInsetsGetVerticalValue(self.imageEdgeInsets);
     }
     
     BOOL isTextLabelShowing = [self isSubviewShowing:_textLabel];
     if (isTextLabelShowing) {
-        CGSize textLabelLimitSize = CGSizeMake(size.width - resultSize.width - self.imageEdgeInsets.right, size.height);
+        CGSize textLabelLimitSize = CGSizeMake(size.width - resultSize.width - UIEdgeInsetsGetHorizontalValue(self.textEdgeInsets), size.height);
         CGSize textLabelSize = [_textLabel sizeThatFits:textLabelLimitSize];
-        resultSize.width += (isImageViewShowing ? self.imageEdgeInsets.right : 0) + ceil(textLabelSize.width) + self.textEdgeInsets.left;
-        resultSize.height = MAX(resultSize.height, ceil(textLabelSize.height) + self.textEdgeInsets.top);
+        resultSize.width += ceil(textLabelSize.width) + UIEdgeInsetsGetHorizontalValue(self.textEdgeInsets);
+        resultSize.height = MAX(resultSize.height, ceil(textLabelSize.height) + UIEdgeInsetsGetVerticalValue(self.textEdgeInsets));
     }
-    resultSize.width = MIN(size.width, resultSize.width);
-    resultSize.height = MIN(size.height, resultSize.height);
     return resultSize;
 }
 
@@ -773,12 +1028,13 @@
     appearance.maximumHeight = CGFLOAT_MAX;
     appearance.minimumHeight = 0;
     appearance.preferLayoutDirection = QMUIPopupContainerViewLayoutDirectionAbove;
+    appearance.usesOppositeLayoutAlignmentIfNeeded = YES;
     appearance.distanceBetweenSource = 5;
     appearance.safetyMarginsOfSuperview = UIEdgeInsetsMake(10, 10, 10, 10);
-    appearance.backgroundColor = UIColorWhite;
+    appearance.backgroundColor = UIColorWhite;// 如果先设置了 UIView.appearance.backgroundColor，再使用最传统的 method_exchangeImplementations 交换 UIView.setBackgroundColor 方法，则会 crash。QMUI 这里是在 +initialize 时设置的，业务如果要 hook -[UIView setBackgroundColor:] 则需要比 +initialize 更早才行
     appearance.maskViewBackgroundColor = UIColorMask;
     appearance.highlightedBackgroundColor = nil;
-    appearance.shadowColor = UIColorMakeWithRGBA(0, 0, 0, .1);
+    appearance.shadow = [NSShadow qmui_shadowWithColor:UIColorMakeWithRGBA(0, 0, 0, .1) shadowOffset:CGSizeMake(0, 2) shadowRadius:10];
     appearance.borderColor = UIColorGrayLighten;
     appearance.borderWidth = PixelOne;
     appearance.cornerRadius = 10;

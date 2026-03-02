@@ -5,7 +5,7 @@
 //  Created by GG on 2022/5/20.
 //
 
-#import <YTKNetwork/YTKNetwork.h>
+#import <GGYTKNetwork/YTKNetwork.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

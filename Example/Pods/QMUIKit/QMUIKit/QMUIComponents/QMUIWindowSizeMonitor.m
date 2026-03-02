@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -18,7 +18,7 @@
 
 @interface NSObject (QMUIWindowSizeMonitor_Private)
 
-@property(nonatomic, readonly) NSMutableArray <QMUIWindowSizeObserverHandler> *qwsm_windowSizeChangeHandlers;
+@property(nonatomic, readonly) NSMutableDictionary<QMUIWindowSizeObserverHandler, QMUIWeakObjectContainer *> *qwsm_windowSizeChangeHandlers;
 
 @end
 
@@ -31,7 +31,7 @@
 
 @interface UIWindow (QMUIWindowSizeMonitor_Private)
 
-@property(nonatomic, assign) CGSize qwsm_previousSzie;
+@property(nonatomic, assign) CGSize qwsm_previousSize;
 @property(nonatomic, readonly) NSPointerArray *qwsm_sizeObservers;
 @property(nonatomic, readonly) NSPointerArray *qwsm_canReceiveWindowDidTransitionToSizeResponders;
 
@@ -48,7 +48,7 @@
 }
 
 - (void)qmui_addSizeObserverForWindow:(UIWindow *)window handler:(QMUIWindowSizeObserverHandler)handler {
-    NSAssert(window != nil, @"window is nil!");
+    QMUIAssert(window != nil, @"NSObject (QMUIWindowSizeMonitor)", @"%s, window should not be nil.", __func__);
     
     struct Block_literal {
         void *isa;
@@ -58,21 +58,21 @@
     };
     
     void * blockFuncPtr = ((__bridge struct Block_literal *)handler)->__FuncPtr;
-    for (QMUIWindowSizeObserverHandler handler in self.qwsm_windowSizeChangeHandlers) {
+    for (QMUIWindowSizeObserverHandler handler in self.qwsm_windowSizeChangeHandlers.allKeys) {
         // 由于利用 block 的 __FuncPtr 指针来判断同一个实现的 block 过滤掉，防止重复添加监听
         if (((__bridge struct Block_literal *)handler)->__FuncPtr == blockFuncPtr) {
             return;
         }
     }
     
-    [self.qwsm_windowSizeChangeHandlers addObject:handler];
+    self.qwsm_windowSizeChangeHandlers[(id)handler] = [[QMUIWeakObjectContainer alloc] initWithObject:window];
     [window qwsm_addSizeObserver:self];
 }
 
-- (NSMutableArray<QMUIWindowSizeObserverHandler> *)qwsm_windowSizeChangeHandlers {
-    NSMutableArray *_handlers = objc_getAssociatedObject(self, _cmd);
+- (NSMutableDictionary<QMUIWindowSizeObserverHandler, QMUIWeakObjectContainer *> *)qwsm_windowSizeChangeHandlers {
+    NSMutableDictionary *_handlers = objc_getAssociatedObject(self, _cmd);
     if (!_handlers) {
-        _handlers = [NSMutableArray array];
+        _handlers = [[NSMutableDictionary alloc] init];
         objc_setAssociatedObject(self, _cmd, _handlers, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return _handlers;
@@ -82,7 +82,7 @@
 
 @implementation UIWindow (QMUIWindowSizeMonitor)
 
-QMUISynthesizeCGSizeProperty(qwsm_previousSzie, setQwsm_previousSzie)
+QMUISynthesizeCGSizeProperty(qwsm_previousSize, setQwsm_previousSize)
 
 + (void)load {
     static dispatch_once_t onceToken;
@@ -90,11 +90,11 @@ QMUISynthesizeCGSizeProperty(qwsm_previousSzie, setQwsm_previousSzie)
         
         void (^notifyNewSizeBlock)(UIWindow *, CGRect) = ^(UIWindow *selfObject, CGRect firstArgv) {
             CGSize newSize = selfObject.bounds.size;
-            if (!CGSizeEqualToSize(newSize, selfObject.qwsm_previousSzie)) {
-                if (!CGSizeEqualToSize(selfObject.qwsm_previousSzie, CGSizeZero)) {
+            if (!CGSizeEqualToSize(newSize, selfObject.qwsm_previousSize)) {
+                if (!CGSizeEqualToSize(selfObject.qwsm_previousSize, CGSizeZero)) {
                     [selfObject qwsm_notifyWithNewSize:newSize];
                 }
-                selfObject.qwsm_previousSzie = selfObject.bounds.size;
+                selfObject.qwsm_previousSize = selfObject.bounds.size;
             }
         };
         
@@ -158,10 +158,11 @@ QMUISynthesizeCGSizeProperty(qwsm_previousSzie, setQwsm_previousSzie)
     // notify sizeObservers
     for (NSUInteger i = 0, count = self.qwsm_sizeObservers.count; i < count; i++) {
         NSObject *object = [self.qwsm_sizeObservers pointerAtIndex:i];
-        for (NSUInteger i = 0, count = object.qwsm_windowSizeChangeHandlers.count; i < count; i++) {
-            QMUIWindowSizeObserverHandler handler = object.qwsm_windowSizeChangeHandlers[i];
-            handler(newSize);
-        }
+        [object.qwsm_windowSizeChangeHandlers enumerateKeysAndObjectsUsingBlock:^(QMUIWindowSizeObserverHandler  _Nonnull key, QMUIWeakObjectContainer * _Nonnull obj, BOOL * _Nonnull stop) {
+            if (obj.object == self) {
+                key(newSize);
+            }
+        }];
     }
     // send ‘windowDidTransitionToSize:’ to responders
     for (NSUInteger i = 0, count = self.qwsm_canReceiveWindowDidTransitionToSizeResponders.count; i < count; i++) {

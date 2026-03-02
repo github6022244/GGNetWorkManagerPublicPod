@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <AFNetworking/AFHTTPSessionManager.h>
+#import <GGAFNetworking/AFHTTPSessionManager.h>
 #import "GGNetWorkManagerDefine.h"
 #import "GGNetWorkManagerLoadingProtocol.h"
 
@@ -19,7 +19,7 @@
 - (NSDictionary *_Nullable)gg_configRequestHeaders;
 
 // 返回公共参数
-- (NSDictionary *_Nullable)gg_configcommonParameters;
+- (NSDictionary *_Nullable)gg_configCommenParameters;
 
 
 /// 返回请求缓存 path

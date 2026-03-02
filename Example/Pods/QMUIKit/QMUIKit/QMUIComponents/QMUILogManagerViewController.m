@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -25,13 +25,13 @@
 #import "QMUITableViewCell.h"
 #import "QMUISearchController.h"
 #import "UIBarItem+QMUI.h"
+#import "UIViewController+QMUI.h"
 
 @interface QMUILogManagerViewController ()
 
 @property(nonatomic, copy) NSDictionary<NSString *, NSNumber *> *allNames;
 @property(nonatomic, copy) NSArray<NSString *> *sortedLogNames;
 @property(nonatomic, copy) NSArray<NSString *> *sectionIndexTitles;
-@property(nonatomic, assign) UIStatusBarStyle statusBarStyle;
 @end
 
 @implementation QMUILogManagerViewController
@@ -39,12 +39,18 @@
 - (void)didInitializeWithStyle:(UITableViewStyle)style {
     [super didInitializeWithStyle:style];
     self.rowCountWhenShowSearchBar = 10;
-    self.statusBarStyle = QMUICMIActivated ? (StatusbarStyleLightInitially ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault) : UIStatusBarStyleDefault;
 }
 
 - (void)initTableView {
     [super initTableView];
     [self setupDataSource];
+}
+
+- (void)initSearchController {
+    [super initSearchController];
+    self.searchController.qmui_preferredStatusBarStyleBlock = ^UIStatusBarStyle{
+        return UIStatusBarStyleDarkContent;
+    };
 }
 
 - (void)viewDidLoad {
@@ -59,10 +65,6 @@
     } else {
         self.navigationItem.rightBarButtonItem = nil;
     }
-}
-
-- (UIStatusBarStyle)preferredStatusBarStyle {
-    return self.statusBarStyle;
 }
 
 - (void)setupDataSource {
@@ -166,25 +168,25 @@
     menuView.maximumWidth = 124;
     menuView.safetyMarginsOfSuperview = UIEdgeInsetsSetRight(menuView.safetyMarginsOfSuperview, 6);
     menuView.items = @[
-                       [QMUIPopupMenuButtonItem itemWithImage:nil title:@"开启全部" handler:^(QMUIPopupMenuButtonItem *aItem) {
-                           for (NSString *logName in self.allNames) {
-                               [[QMUILogger sharedInstance].logNameManager setEnabled:YES forLogName:logName];
-                           }
-                           [self reloadData];
-                           [aItem.menuView hideWithAnimated:YES];
-                       }],
-                       [QMUIPopupMenuButtonItem itemWithImage:nil title:@"禁用全部" handler:^(QMUIPopupMenuButtonItem *aItem) {
-                           for (NSString *logName in self.allNames) {
-                               [[QMUILogger sharedInstance].logNameManager setEnabled:NO forLogName:logName];
-                           }
-                           [self reloadData];
-                           [aItem.menuView hideWithAnimated:YES];
-                       }],
-                       [QMUIPopupMenuButtonItem itemWithImage:nil title:@"清空全部" handler:^(QMUIPopupMenuButtonItem *aItem) {
-                           [[QMUILogger sharedInstance].logNameManager removeAllNames];
-                           [self reloadData];
-                           [aItem.menuView hideWithAnimated:YES];
-                       }]];
+        [QMUIPopupMenuItem itemWithTitle:@"开启全部" handler:^(__kindof QMUIPopupMenuItem * _Nonnull aItem, __kindof UIControl<QMUIPopupMenuItemViewProtocol> * _Nonnull aItemView, NSInteger section, NSInteger index) {
+            for (NSString *logName in self.allNames) {
+                [[QMUILogger sharedInstance].logNameManager setEnabled:YES forLogName:logName];
+            }
+            [self reloadData];
+            [aItem.menuView hideWithAnimated:YES];
+        }],
+        [QMUIPopupMenuItem itemWithTitle:@"禁用全部" handler:^(__kindof QMUIPopupMenuItem * _Nonnull aItem, __kindof UIControl<QMUIPopupMenuItemViewProtocol> * _Nonnull aItemView, NSInteger section, NSInteger index) {
+            for (NSString *logName in self.allNames) {
+                [[QMUILogger sharedInstance].logNameManager setEnabled:NO forLogName:logName];
+            }
+            [self reloadData];
+            [aItem.menuView hideWithAnimated:YES];
+        }],
+        [QMUIPopupMenuItem itemWithTitle:@"清空全部" handler:^(__kindof QMUIPopupMenuItem * _Nonnull aItem, __kindof UIControl<QMUIPopupMenuItemViewProtocol> * _Nonnull aItemView, NSInteger section, NSInteger index) {
+            [[QMUILogger sharedInstance].logNameManager removeAllNames];
+            [self reloadData];
+            [aItem.menuView hideWithAnimated:YES];
+        }]];
     menuView.sourceBarItem = self.navigationItem.rightBarButtonItem;
     [menuView showWithAnimated:YES];
 }
@@ -247,17 +249,9 @@
     }
 }
 
-- (void)willPresentSearchController:(QMUISearchController *)searchController {
-    self.statusBarStyle = UIStatusBarStyleDefault;
-    [self setNeedsStatusBarAppearanceUpdate];
-}
-
 - (void)willDismissSearchController:(QMUISearchController *)searchController {
-    
     // 在搜索状态里可能修改了 switch 的值，则退出时强制刷新一下默认状态的列表
     [self reloadData];
-    self.statusBarStyle = QMUICMIActivated ? (StatusbarStyleLightInitially ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault) : UIStatusBarStyleDefault;
-    [self setNeedsStatusBarAppearanceUpdate];
 }
 
 @end

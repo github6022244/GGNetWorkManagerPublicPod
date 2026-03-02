@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- 1. 是否追踪用户？填 false -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+    
+    <!-- 2. 追踪域名？留空 -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+    
+    <!-- 3. 收集的敏感数据类型？留空 (网络库通常不收集) -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+    
+    <!-- 4. 访问的隐私 API 类型 -->
+    <!-- 修正点：AFNetworking 核心功能不需要声明 Networking 类别。
+         如果使用了 HTTPCookieStorage 或缓存，可能会用到 UserDefaults，建议加上以防万一。
+         如果完全不确定，也可以直接把整个 NSPrivacyAccessedAPITypes 数组留空 <array/> -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <!-- 选项 A: 最稳妥的声明 (AFN 常用 UserDefaults 存 Cookie/Cache) -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- CA92.1 = App Functionality (应用功能所需) -->
+                <string>CA92.1</string>
+            </array>
+        </dict>
+        
+        <!-- 选项 B: 如果你的 AFN 版本较老且涉及文件系统缓存，可能还需要声明 DiskSpace (可选，通常不需要) -->
+        <!--
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+        -->
+    </array>
+</dict>
+</plist>

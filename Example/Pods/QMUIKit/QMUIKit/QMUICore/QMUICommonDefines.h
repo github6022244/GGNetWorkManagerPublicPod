@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -29,6 +29,8 @@
 #define IS_DEBUG NO
 #endif
 
+#define IS_XCTEST (!!NSProcessInfo.processInfo.environment[@"XCTestConfigurationFilePath"])
+
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 90000
 /// 当前编译使用的 Base SDK 版本为 iOS 9.0 及以上
 #define IOS9_SDK_ALLOWED YES
@@ -54,6 +56,31 @@
 #define IOS13_SDK_ALLOWED YES
 #endif
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000
+/// 当前编译使用的 Base SDK 版本为 iOS 14.0 及以上
+#define IOS14_SDK_ALLOWED YES
+#endif
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000
+/// 当前编译使用的 Base SDK 版本为 iOS 15.0 及以上
+#define IOS15_SDK_ALLOWED YES
+#endif
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 160000
+/// 当前编译使用的 Base SDK 版本为 iOS 16.0 及以上
+#define IOS16_SDK_ALLOWED YES
+#endif
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 170000
+/// 当前编译使用的 Base SDK 版本为 iOS 17.0 及以上
+#define IOS17_SDK_ALLOWED YES
+#endif
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
+/// 当前编译使用的 Base SDK 版本为 iOS 18.0 及以上
+#define IOS18_SDK_ALLOWED YES
+#endif
+
 #pragma mark - Clang
 
 #define ArgumentToString(macro) #macro
@@ -75,8 +102,8 @@
 #pragma mark - 忽略 iOS 13 KVC 访问私有属性限制
 
 /// 将 KVC 代码包裹在这个宏中，可忽略系统的  KVC 访问限制
-#define BeginIgnoreUIKVCAccessProhibited if (@available(iOS 13.0, *)) NSThread.currentThread.qmui_shouldIgnoreUIKVCAccessProhibited = YES;
-#define EndIgnoreUIKVCAccessProhibited if (@available(iOS 13.0, *)) NSThread.currentThread.qmui_shouldIgnoreUIKVCAccessProhibited = NO;
+#define BeginIgnoreUIKVCAccessProhibited NSThread.currentThread.qmui_shouldIgnoreUIKVCAccessProhibited = YES;
+#define EndIgnoreUIKVCAccessProhibited NSThread.currentThread.qmui_shouldIgnoreUIKVCAccessProhibited = NO;
 
 #pragma mark - 变量-设备相关
 
@@ -85,6 +112,7 @@
 #define IS_IPOD [QMUIHelper isIPod]
 #define IS_IPHONE [QMUIHelper isIPhone]
 #define IS_SIMULATOR [QMUIHelper isSimulator]
+#define IS_MAC [QMUIHelper isMac]
 
 /// 操作系统版本号，只获取第二级的版本号，例如 10.3.1 只会得到 10.3
 #define IOS_VERSION ([[[UIDevice currentDevice] systemVersion] doubleValue])
@@ -118,14 +146,24 @@
 
 /// 是否全面屏设备
 #define IS_NOTCHED_SCREEN [QMUIHelper isNotchedScreen]
+/// iPhone 14 Pro Max
+#define IS_67INCH_SCREEN_AND_IPHONE14 [QMUIHelper is67InchScreenAndiPhone14Later]
+/// iPhone 12 Pro Max
+#define IS_67INCH_SCREEN [QMUIHelper is67InchScreen]
 /// iPhone XS Max
 #define IS_65INCH_SCREEN [QMUIHelper is65InchScreen]
+/// iPhone 14 Pro / 15 Pro
+#define IS_61INCH_SCREEN_AND_IPHONE14PRO [QMUIHelper is61InchScreenAndiPhone14ProLater]
+/// iPhone 12 / 12 Pro
+#define IS_61INCH_SCREEN_AND_IPHONE12 [QMUIHelper is61InchScreenAndiPhone12Later]
 /// iPhone XR
 #define IS_61INCH_SCREEN [QMUIHelper is61InchScreen]
 /// iPhone X/XS
 #define IS_58INCH_SCREEN [QMUIHelper is58InchScreen]
 /// iPhone 6/7/8 Plus
 #define IS_55INCH_SCREEN [QMUIHelper is55InchScreen]
+/// iPhone 12 mini
+#define IS_54INCH_SCREEN [QMUIHelper is54InchScreen]
 /// iPhone 6/7/8
 #define IS_47INCH_SCREEN [QMUIHelper is47InchScreen]
 /// iPhone 5/5S/SE
@@ -141,6 +179,9 @@
 /// 是否放大模式（iPhone 6及以上的设备支持放大模式，iPhone X 除外）
 #define IS_ZOOMEDMODE [QMUIHelper isZoomedMode]
 
+/// 当前设备是否拥有灵动岛
+#define IS_DYNAMICISLAND_DEVICE [QMUIHelper isDynamicIslandDevice]
+
 #pragma mark - 变量-布局相关
 
 /// 获取一个像素
@@ -153,29 +194,45 @@
 #define ScreenNativeScale ([[UIScreen mainScreen] nativeScale])
 
 /// toolBar相关frame
-#define ToolBarHeight (IS_IPAD ? (IS_NOTCHED_SCREEN ? 70 : (IOS_VERSION >= 12.0 ? 50 : 44)) : (IS_LANDSCAPE ? PreferredValueForVisualDevice(44, 32) : 44) + SafeAreaInsetsConstantForDeviceWithNotch.bottom)
+#define ToolBarHeight (IS_IPAD ? (IS_NOTCHED_SCREEN ? 70 : 50) : (IS_LANDSCAPE ? PreferredValueForVisualDevice(44, 32) : 44) + SafeAreaInsetsConstantForDeviceWithNotch.bottom)
 
 /// tabBar相关frame
-#define TabBarHeight (IS_IPAD ? (IS_NOTCHED_SCREEN ? 65 : (IOS_VERSION >= 12.0 ? 50 : 49)) : (IS_LANDSCAPE ? PreferredValueForVisualDevice(49, 32) : 49) + SafeAreaInsetsConstantForDeviceWithNotch.bottom)
+#define TabBarHeight (IS_IPAD ? (IS_NOTCHED_SCREEN ? 65 : 50) : (IS_LANDSCAPE ? PreferredValueForVisualDevice(49, 32) : 49) + SafeAreaInsetsConstantForDeviceWithNotch.bottom)
 
 /// 状态栏高度(来电等情况下，状态栏高度会发生变化，所以应该实时计算，iOS 13 起，来电等情况下状态栏高度不会改变)
 #define StatusBarHeight (UIApplication.sharedApplication.statusBarHidden ? 0 : UIApplication.sharedApplication.statusBarFrame.size.height)
 
 /// 状态栏高度(如果状态栏不可见，也会返回一个普通状态下可见的高度)
-#define StatusBarHeightConstant (UIApplication.sharedApplication.statusBarHidden ? (IS_IPAD ? (IS_NOTCHED_SCREEN ? 24 : 20) : PreferredValueForNotchedDevice(IS_LANDSCAPE ? 0 : 44, 20)) : UIApplication.sharedApplication.statusBarFrame.size.height)
+#define StatusBarHeightConstant [QMUIHelper statusBarHeightConstant]
 
 /// navigationBar 的静态高度
-#define NavigationBarHeight (IS_IPAD ? (IOS_VERSION >= 12.0 ? 50 : 44) : (IS_LANDSCAPE ? PreferredValueForVisualDevice(44, 32) : 44))
+#define NavigationBarHeight (IS_IPAD ? 50 : (IS_LANDSCAPE ? PreferredValueForVisualDevice(44, 32) : 44))
 
 /// 代表(导航栏+状态栏)，这里用于获取其高度
 /// @warn 如果是用于 viewController，请使用 UIViewController(QMUI) qmui_navigationBarMaxYInViewCoordinator 代替
 #define NavigationContentTop (StatusBarHeight + NavigationBarHeight)
 
 /// 同上，这里用于获取它的静态常量值
-#define NavigationContentTopConstant (StatusBarHeightConstant + NavigationBarHeight)
+#define NavigationContentTopConstant (QMUIHelper.navigationBarMaxYConstant)
+
+/// 判断当前是否是处于分屏模式的 iPad 或 iOS 16.1 的台前调度模式
+#define IS_SPLIT_SCREEN_IPAD (IS_IPAD && APPLICATION_WIDTH != SCREEN_WIDTH)
 
 /// iPhoneX 系列全面屏手机的安全区域的静态值
 #define SafeAreaInsetsConstantForDeviceWithNotch [QMUIHelper safeAreaInsetsForDeviceWithNotch]
+
+/// 将所有屏幕按照宽松/紧凑分类，其中 iPad、iPhone XS Max/XR/Plus 均为宽松屏幕，但开启了放大模式的设备均会视为紧凑屏幕
+#define PreferredValueForVisualDevice(_regular, _compact) ([QMUIHelper isRegularScreen] ? _regular : _compact)
+
+/// 将所有屏幕按照 Phone/Pad 分类，由于历史上宽高比最大（最胖）的手机为 iPhone 4，所以这里以它为基准，只要宽高比比 iPhone 4 更小的，都视为 Phone，其他情况均视为 Pad。注意 iPad 分屏则取分屏后的宽高来计算。
+#define PreferredValueForInterfaceIdiom(_phone, _pad) (APPLICATION_WIDTH / APPLICATION_HEIGHT <= QMUIHelper.screenSizeFor35Inch.width / QMUIHelper.screenSizeFor35Inch.height ? _phone : _pad)
+
+/// 区分全面屏和非全面屏
+#define PreferredValueForNotchedDevice(_notchedDevice, _otherDevice) ([QMUIHelper isNotchedScreen] ? _notchedDevice : _otherDevice)
+
+
+#pragma mark - 变量-布局相关-已废弃
+/// 由于 iOS 设备屏幕碎片化越来越严重，因此以下这些宏不建议使用，以后有设备更新也不再维护，请使用 PreferredValueForVisualDevice、PreferredValueForInterfaceIdiom 代替。
 
 /// 按屏幕宽度来区分不同 iPhone 尺寸，iPhone XS Max/XR/Plus 归为一类，iPhone X/8/7/6 归为一类。
 /// iPad 也会视为最大的屏幕宽度来处理
@@ -183,15 +240,6 @@
 
 /// 同上，单独将 iPad 区分对待
 #define PreferredValueForDeviceIncludingiPad(_iPad, _65or61or55inch, _47or58inch, _40inch, _35inch) PreferredValueForAll(_iPad, _65or61or55inch, _65or61or55inch, _47or58inch, _65or61or55inch, _47or58inch, _40inch, _35inch)
-
-/// 区分全面屏（iPhone X 系列）和非全面屏
-#define PreferredValueForNotchedDevice(_notchedDevice, _otherDevice) ([QMUIHelper isNotchedScreen] ? _notchedDevice : _otherDevice)
-
-/// 将所有屏幕按照宽松/紧凑分类，其中 iPad、iPhone XS Max/XR/Plus 均为宽松屏幕，但开启了放大模式的设备均会视为紧凑屏幕
-#define PreferredValueForVisualDevice(_regular, _compact) ([QMUIHelper isRegularScreen] ? _regular : _compact)
-
-/// 判断当前是否是处于分屏模式的 iPad
-#define IS_SPLIT_SCREEN_IPAD (IS_IPAD && APPLICATION_WIDTH != SCREEN_WIDTH)
 
 /// 若 iPad 处于分屏模式下，返回 iPad 接近 iPhone 宽度（320、375、414）中近似的一种，方便屏幕适配。
 #define IPAD_SIMILAR_SCREEN_WIDTH [QMUIHelper preferredLayoutAsSimilarScreenWidthForIPad]
@@ -201,10 +249,10 @@
 #define _65INCH_WIDTH [QMUIHelper screenSizeFor65Inch].width
 
 #define AS_IPAD (DynamicPreferredValueForIPad ? ((IS_IPAD && !IS_SPLIT_SCREEN_IPAD) || (IS_SPLIT_SCREEN_IPAD && APPLICATION_WIDTH >= 768)) : IS_IPAD)
-#define AS_65INCH_SCREEN (IS_65INCH_SCREEN || (IS_IPAD && DynamicPreferredValueForIPad && IPAD_SIMILAR_SCREEN_WIDTH == _65INCH_WIDTH))
-#define AS_61INCH_SCREEN IS_61INCH_SCREEN
-#define AS_58INCH_SCREEN (IS_58INCH_SCREEN || ((AS_61INCH_SCREEN || AS_65INCH_SCREEN) && IS_ZOOMEDMODE) || (IS_IPAD && DynamicPreferredValueForIPad && IPAD_SIMILAR_SCREEN_WIDTH == _58INCH_WIDTH))
-#define AS_55INCH_SCREEN IS_55INCH_SCREEN
+#define AS_65INCH_SCREEN (IS_67INCH_SCREEN_AND_IPHONE14 || IS_67INCH_SCREEN || IS_65INCH_SCREEN || (IS_IPAD && DynamicPreferredValueForIPad && IPAD_SIMILAR_SCREEN_WIDTH == _65INCH_WIDTH))
+#define AS_61INCH_SCREEN (IS_61INCH_SCREEN_AND_IPHONE12 || IS_61INCH_SCREEN)
+#define AS_58INCH_SCREEN (IS_58INCH_SCREEN || IS_54INCH_SCREEN || ((AS_61INCH_SCREEN || AS_65INCH_SCREEN) && IS_ZOOMEDMODE) || (IS_IPAD && DynamicPreferredValueForIPad && IPAD_SIMILAR_SCREEN_WIDTH == _58INCH_WIDTH))
+#define AS_55INCH_SCREEN (IS_55INCH_SCREEN)
 #define AS_47INCH_SCREEN (IS_47INCH_SCREEN || (IS_55INCH_SCREEN && IS_ZOOMEDMODE))
 #define AS_40INCH_SCREEN (IS_40INCH_SCREEN || (IS_IPAD && DynamicPreferredValueForIPad && IPAD_SIMILAR_SCREEN_WIDTH == _40INCH_WIDTH))
 #define AS_35INCH_SCREEN IS_35INCH_SCREEN
@@ -264,10 +312,13 @@ AddAccessibilityHint(NSObject *obj, NSString *hint) {
 
 #pragma mark - 其他
 
-// 固定黑色的 StatusBarStyle，用于亮色背景，作为 -preferredStatusBarStyle 方法的 return 值使用。
-#define QMUIStatusBarStyleDarkContent [QMUIHelper statusBarStyleDarkContent]
-
 #define StringFromBOOL(_flag) (_flag ? @"YES" : @"NO")
+
+/// 代替 NSAssert 使用，在触发 assert 之前会用 QMUILogWarn 输出日志，当你开启了配置表的 ShouldPrintQMUIWarnLogToConsole 时，会用 QMUIConsole 代替 NSAssert，避免中断当前程序的运行
+/// 与 NSAssert 的差异在于，当你使用 NSAssert 时，整条语句默认不会出现在 Release 包里，但 QMUIAssert 依然会存在。
+/// 用法：QMUIAssert(a != b, @"UIView (QMUI)", @"xxxx")
+/// 用法：QMUIAssert(a != b, @"UIView (QMUI)", @"%@, xxx", @"xxx")
+#define QMUIAssert(_condition, _categoryName, ...) ({if (!(_condition)) {QMUILogWarn(_categoryName, __VA_ARGS__);if (!QMUICMIActivated || !ShouldPrintQMUIWarnLogToConsole) {NSAssert(NO, __VA_ARGS__);}}})
 
 #pragma mark - Selector
 
@@ -290,11 +341,12 @@ setterWithGetter(SEL getter) {
 
 /**
  *  某些地方可能会将 CGFLOAT_MIN 作为一个数值参与计算（但其实 CGFLOAT_MIN 更应该被视为一个标志位而不是数值），可能导致一些精度问题，所以提供这个方法快速将 CGFLOAT_MIN 转换为 0
+ *  某些情况可能计算出来是0.0000000x，也靠这个方法抹去尾数。
  *  issue: https://github.com/Tencent/QMUI_iOS/issues/203
  */
 CG_INLINE CGFloat
 removeFloatMin(CGFloat floatValue) {
-    return floatValue == CGFLOAT_MIN ? 0 : floatValue;
+    return fabs(floatValue) <= 0.001 ? 0 : floatValue;
 }
 
 /**
@@ -304,9 +356,19 @@ removeFloatMin(CGFloat floatValue) {
  */
 CG_INLINE CGFloat
 flatSpecificScale(CGFloat floatValue, CGFloat scale) {
+    if (isinf(floatValue) || floatValue == CGFLOAT_MAX) return floatValue;
     floatValue = removeFloatMin(floatValue);
     scale = scale ?: ScreenScale;
-    CGFloat flattedValue = ceil(floatValue * scale) / scale;
+    // 这里因为浮点精度的问题，可能会出现一些偏差，例如 161.66666666666669 算出来可能是162，161.66666666666666 算出来是161.66666666667，为了解决这种场景，这里同时用 ceil 和 round 算一遍再取最接近的那个结果
+    NSInteger pixelValue1 = ceil(floatValue * scale);
+    NSInteger pixelValue2 = round(floatValue * scale);
+    NSInteger pixelValue = 0;
+    if (fabs(pixelValue1 - floatValue) <= fabs(pixelValue2 - floatValue)) {
+        pixelValue = pixelValue1;
+    } else {
+        pixelValue = pixelValue2;
+    }
+    CGFloat flattedValue = pixelValue / scale;
     return flattedValue;
 }
 
@@ -361,24 +423,56 @@ CGFloatToFixed(CGFloat value, NSUInteger precision) {
 }
 
 /**
- 将给定的两个 CGFloat 进行等值比较，并通过参数 precision 指定要考虑的小数点后的精度，内部会将浮点数转成整型，从而避免浮点数精度导致的 == 判断错误。
- 例如 CGFloatEqualToFloatWithPrecision(1.000, 0.999, 0) 会返回 YES，但 1.000 == 0.999 会得到 NO。
- */
-CG_INLINE BOOL
-CGFloatEqualToFloatWithPrecision(CGFloat value1, CGFloat value2, NSUInteger precision) {
-    NSInteger a = ((NSInteger)round(value1) * pow(10, precision));
-    NSInteger b = ((NSInteger)round(value2) * pow(10, precision));
-    return a == b;
+ 用于两个 CGFloat 值之间的比较运算，支持 ==、>、<、>=、<= 5种，内部会将浮点数转成整型，从而避免浮点数精度导致的判断错误。
+ 
+ CGFloatEqualToFloatWithPrecision()
+ CGFloatEqualToFloat()
+ CGFloatMoreThanFloatWithPrecision()
+ CGFloatMoreThanFloat()
+ CGFloatMoreThanOrEqualToFloatWithPrecision()
+ CGFloatMoreThanOrEqualToFloat()
+ CGFloatLessThanFloatWithPrecision()
+ CGFloatLessThanFloat()
+ CGFloatLessThanOrEqualToFloatWithPrecision()
+ CGFloatLessThanOrEqualToFloat()
+ 
+ 可通过参数 precision 指定要考虑的小数点后的精度，精度的定义是保证指定的那一位小数点不会因为浮点问题导致计算错误，例如当我们要获取一个 1.0 的浮点数时，有时候会得到 0.99999999，有时候会得到 1.000000001，所以需要对指定的那一位小数点的后一位数进行四舍五入操作。
+ @code
+ precision = 0，也即对小数点后0+1位四舍五入
+    0.999 -> 0.9 -> round(0.9) -> 1
+    1.011 -> 1.0 -> round(1.0) -> 1
+    1.033 -> 1.0 -> round(1.0) -> 1
+    1.099 -> 1.0 -> round(1.0) -> 1
+ precision = 1，也即对小数点后1+1位四舍五入
+    0.999 -> 9.9 -> round(9.9)   -> 10 -> 1.0
+    1.011 -> 10.1 -> round(10.1) -> 10 -> 1.0
+    1.033 -> 10.3 -> round(10.3) -> 10 -> 1.0
+    1.099 -> 10.9 -> round(10.9) -> 11 -> 1.1
+ precision = 2，也即对小数点后2+1位四舍五入
+    0.999 -> 99.9 -> round(99.9)   -> 100 -> 1.00
+    1.011 -> 101.1 -> round(101.1) -> 101 -> 1.01
+    1.033 -> 103.3 -> round(103.3) -> 103 -> 1.03
+    1.099 -> 109.9 -> round(109.9) -> 110 -> 1.1
+ @endcode
+*/
+CG_INLINE NSInteger _RoundedIntegerFromCGFloat(CGFloat value, NSUInteger precision) {
+    return (NSInteger)(round(value * pow(10, precision)));
 }
 
-/**
- 将给定的两个 CGFloat 进行等值比较，不考虑小数点后的数值。
- 例如 CGFloatEqualToFloat(1.000, 0.999) 会返回 YES，但 1.000 == 0.999 会得到 NO。
- */
-CG_INLINE BOOL
-CGFloatEqualToFloat(CGFloat value1, CGFloat value2) {
-    return CGFloatEqualToFloatWithPrecision(value1, value2, 0);
+#define _CGFloatCalcGenerator(_operatorName, _operator) CG_INLINE BOOL CGFloat##_operatorName##FloatWithPrecision(CGFloat value1, CGFloat value2, NSUInteger precision) {\
+    NSInteger a = _RoundedIntegerFromCGFloat(value1, precision);\
+    NSInteger b = _RoundedIntegerFromCGFloat(value2, precision);\
+    return a _operator b;\
+}\
+CG_INLINE BOOL CGFloat##_operatorName##Float(CGFloat value1, CGFloat value2) {\
+    return CGFloat##_operatorName##FloatWithPrecision(value1, value2, 0);\
 }
+
+_CGFloatCalcGenerator(EqualTo, ==)
+_CGFloatCalcGenerator(LessThan, <)
+_CGFloatCalcGenerator(LessThanOrEqualTo, <=)
+_CGFloatCalcGenerator(MoreThan, >)
+_CGFloatCalcGenerator(MoreThanOrEqualTo, >=)
 
 /// 用于居中运算
 CG_INLINE CGFloat

@@ -6,13 +6,14 @@
 //
 
 #import "GGNetWorkManager.h"
-#import "GGNetWorkManagerDefine.h"
-#import <YTKNetwork/YTKNetworkConfig.h>
-#import <YTKNetwork/YTKRequest.h>
-#import "GGNetworkCacheDirPathFilter.h"
+#import <GGYTKNetwork/YTKNetworkConfig.h>
+#import "MRUrlArgumentsFilter.h"
+#import "MRCacheDirPathFilter.h"
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
+
+#define GGNetWorkManagerDebugServerTypeUserDefaultsKey @"GGNetWorkManagerDebugServerTypeUserDefaultsKey"
 
 #define GGNetWorkManagerShareInstance [GGNetWorkManager share]
 
@@ -28,7 +29,7 @@
 
 @property (nonatomic, strong) NSDictionary *requestHeaders;// 请求 header (通过 configModel 配置)
 
-@property (nonatomic, strong) NSDictionary *commonParameters;// 请求公共参数 (通过 configModel 配置)
+@property (nonatomic, strong) NSDictionary *commenParameters;// 请求公共参数 (通过 configModel 配置)
 
 @property (nonatomic, strong) NSDictionary *filterCacheDirPath;// 请求缓存本地地址
 
@@ -44,16 +45,12 @@
 
 #pragma mark ------------------------- Cycle -------------------------
 + (instancetype)share {
+    static GGNetWorkManager *manager;
     static dispatch_once_t onceToken;
-    static GGNetWorkManager *instance = nil;
     dispatch_once(&onceToken, ^{
-        instance = [[super allocWithZone:NULL] init];
+        manager = [[GGNetWorkManager alloc] init];
     });
-    return instance;
-}
-
-+ (id)allocWithZone:(struct _NSZone *)zone {
-    return [self share];
+    return manager;
 }
 
 #pragma mark ------------------------- Cofnig -------------------------
@@ -62,7 +59,7 @@
     
     self.requestHeaders = [self.configModel gg_configRequestHeaders];
     
-    self.commonParameters = [self.configModel gg_configcommonParameters];
+    self.commenParameters = [self.configModel gg_configCommenParameters];
     
     self.filterCacheDirPath = [self.configModel gg_configFilterCacheDirPath];
     
@@ -81,10 +78,11 @@
     [YTKNetworkConfig sharedConfig].baseUrl = GGNetWorkManagerShareInstance.currentServerURL;
     [YTKNetworkConfig sharedConfig].cdnUrl = GGNetWorkManagerShareInstance.currentCDNURL;
     [YTKNetworkConfig sharedConfig].debugLogEnabled = GGNetWorkManagerShareInstance.debugLogEnable;
-    
-    GGNetworkCacheDirPathFilter *cacheDirPathFilter = [[GGNetworkCacheDirPathFilter alloc] init];
+
+    MRUrlArgumentsFilter *urlFilter = [MRUrlArgumentsFilter filterWithArguments:self.commenParameters];
+    [[YTKNetworkConfig sharedConfig] addUrlFilter:urlFilter];
+    MRCacheDirPathFilter *cacheDirPathFilter = [[MRCacheDirPathFilter alloc] init];
     [[YTKNetworkConfig sharedConfig] addCacheDirPathFilter:cacheDirPathFilter];
-    
     /// 证书配置
     AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
    // 如果需要验证自建证书(无效证书)，需要设置为YES，默认为NO;
@@ -97,7 +95,9 @@
 #pragma mark ------------------------- Interface -------------------------
 // 初始化配置，传入自定义的 model
 + (void)setUpConfigModel:(id<GGNetWorkManagerConfigProtocol>)configModel {
-    GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
+    if (GGNetWorkManagerShareInstance.debugLogEnable) {
+        GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
+    }
     
     GGNetWorkManagerShareInstance.configModel = configModel;
     
@@ -139,29 +139,6 @@
         }
             break;
     }
-}
-
-#pragma mark --- 清除网络请求缓存
-+ (void)clearNetRequestCaches {
-    [self _clearCacheWithFilePath:[self getNetRequestCachesFilePath]];
-}
-
-#pragma mark --- 获取网络缓存大小
-+ (CGFloat)getNetRequestCachesSize {
-    return [self _getCacheSizeWithFilePath:[self getNetRequestCachesFilePath]];
-}
-
-#pragma mark --- 获取网络缓存文件路径
-+ (NSString *)getNetRequestCachesFilePath {
-    YTKRequest *request = [YTKRequest new];
-GGNetWorkPushIgnoreUndeclaredSelectorWarning
-    if ([request respondsToSelector:@selector(cacheBasePath)]) {
-        NSString *libraryCachePath = [request performSelector:@selector(cacheBasePath)];
-GGNetWorkPopClangDiagnosticWarnings
-        return libraryCachePath;
-    }
-    
-    return nil;
 }
 
 #pragma mark ------------------------- Private -------------------------
@@ -214,62 +191,6 @@ GGNetWorkPopClangDiagnosticWarnings
         }
             break;
     }
-}
-
-//清除path文件夹下缓存
-+ (BOOL)_clearCacheWithFilePath:(NSString *)path {
-    if (!path.length) {
-        return NO;
-    }
-    
-    //拿到path路径的下一级目录的子文件夹
-    NSArray *subPathArr = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:nil];
-    NSString *filePath = nil;
-    NSError *error = nil;
-    for (NSString *subPath in subPathArr) {
-        filePath = [path stringByAppendingPathComponent:subPath];
-        //删除子文件夹
-        [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-        if (error) {
-            return NO;
-        }
-        
-    }
-    
-    return YES;
-}
-
-+ (NSInteger)_getCacheSizeWithFilePath:(NSString *)path {
-    if (!path.length) {
-        return 0;
-    }
-    
-    // 获取“path”文件夹下的所有文件
-    NSArray *subPathArr = [[NSFileManager defaultManager] subpathsAtPath:path];
-    NSString *filePath = nil;
-    NSInteger totleSize = 0;
-    for (NSString *subPath in subPathArr) {
-        
-        filePath = [path stringByAppendingPathComponent:subPath];
-        
-        BOOL isDirectory = NO;
-        
-        BOOL isExist = [[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&isDirectory];
-        
-        //忽略不需要计算的文件:文件夹不存在/ 过滤文件夹/隐藏文件
-        if (!isExist || isDirectory || [filePath containsString:@".DS"]) {
-            continue;
-        }
-        
-        /** attributesOfItemAtPath: 文件夹路径 该方法只能获取文件的属性, 无法获取文件夹属性, 所以也是需要遍历文件夹的每一个文件的原因 */
-        NSDictionary *dict = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
-        
-        NSInteger size = [dict[@"NSFileSize"] integerValue];
-        // 计算总大小
-        totleSize += size;
-    }
-    
-    return totleSize;
 }
 
 #pragma mark ------------------------- set / get -------------------------

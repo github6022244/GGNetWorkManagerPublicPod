@@ -6,7 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <AFNetworking/AFNetworking.h>
+#import <GGAFNetworking/AFNetworking.h>
 #import "GGNetWorkManagerDefine.h"
 #import "GGNetWorkManagerConfigProtocol.h"
 #import "GGNetWorkManagerLoadingProtocol.h"
@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, readonly) NSDictionary *requestHeaders;// 请求 header (通过 configModel 配置)
 
-@property (nonatomic, strong, readonly) NSDictionary *commonParameters;// 请求公共参数 (通过 configModel 配置)
+@property (nonatomic, strong, readonly) NSDictionary *commenParameters;// 请求公共参数 (通过 configModel 配置)
 
 @property (nonatomic, strong, readonly) NSDictionary *filterCacheDirPath;// 请求缓存本地地址
 
@@ -58,15 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// 根据url类型返回当前配置的域名
 /// @param urlType url 类型
 + (NSString *)getCurrentURLWithUrlType:(GGNetManagerURLType)urlType;
-
-/// 清除网络请求缓存
-+ (void)clearNetRequestCaches;
-
-/// 获取网络缓存大小
-+ (CGFloat)getNetRequestCachesSize;
-
-/// 获取网络缓存文件路径
-+ (NSString *)getNetRequestCachesFilePath;
 
 @end
 

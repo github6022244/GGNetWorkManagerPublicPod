@@ -9,7 +9,9 @@
 #import <QMUIKit.h>
 #import <GGNetWorkHelper.h>
 
-#define BASE_URL @"http://cxgl.changxianggu.com/app/"
+#define DEBUG_URL @"http://cxgl.changxianggu.com/app/"
+
+#define PUBLIC_URL @"http://test01.changxianggu.com/app/"
 
 @implementation GGNetWorkConfigModel
 
@@ -19,7 +21,7 @@
 }
 
 // 返回公共参数
-- (NSDictionary *_Nullable)gg_configcommonParameters {
+- (NSDictionary *_Nullable)gg_configCommenParameters {
     return [self _configcommonParameterWithParam:nil];
 }
 
@@ -56,7 +58,7 @@
 }
 
 - (NSString * _Nullable)gg_configURL_Develope_Sever {
-    return BASE_URL;
+    return DEBUG_URL;
 }
 
 - (NSString * _Nonnull)gg_configURL_Public_CDN {
@@ -68,7 +70,7 @@
 }
 
 - (NSString * _Nonnull)gg_configURL_Public_Sever {
-    return nil;
+    return PUBLIC_URL;
 }
 
 - (NSString * _Nullable)gg_configURL_Test_CDN {

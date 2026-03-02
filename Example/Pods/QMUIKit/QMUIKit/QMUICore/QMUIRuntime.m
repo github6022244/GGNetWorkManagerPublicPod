@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -15,13 +15,14 @@
 
 #import "QMUIRuntime.h"
 #import "QMUICommonDefines.h"
+#import "QMUIHelper.h"
 #include <mach-o/getsect.h>
 #include <mach-o/dyld.h>
 
 @implementation QMUIPropertyDescriptor
 
 + (instancetype)descriptorWithProperty:(objc_property_t)property {
-    QMUIPropertyDescriptor *descriptor = [[QMUIPropertyDescriptor alloc] init];
+    QMUIPropertyDescriptor *descriptor = [[self alloc] init];
     NSString *propertyName = [NSString stringWithUTF8String:property_getName(property)];
     descriptor.name = propertyName;
     
@@ -163,14 +164,33 @@ static BOOL strendswith(const char *str, const char *suffix) {
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
-static const headerType *getProjectImageHeader() {
+static const headerType *getProjectImageHeader(void) {
     const uint32_t imageCount = _dyld_image_count();
-    const char *target_image_name = ((NSString *)[[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleExecutableKey]).UTF8String;
-    if (!target_image_name || strlen(target_image_name) <= 0) return nil;
+    NSString *executablePath = NSBundle.mainBundle.executablePath;
+    if (!executablePath) return nil;
     const headerType *target_image_header = 0;
+#ifdef IOS18_SDK_ALLOWED
+#if DEBUG
+    // Xcode16之后，优先查找debug.dylib
+    NSString *debugImagePath = [NSString stringWithFormat:@"%@.debug.dylib", executablePath];
+    for (uint32_t i = 0; i < imageCount; i++) {
+        const char *image_name = _dyld_get_image_name(i);
+        NSString *imagePath = [NSString stringWithUTF8String:image_name];
+        if ([imagePath isEqualToString:debugImagePath]) {
+            target_image_header = (headerType *)_dyld_get_image_header(i);
+            break;
+        }
+    }
+
+    if (target_image_header) {
+        return target_image_header;
+    }
+#endif
+#endif
     for (uint32_t i = 0; i < imageCount; i++) {
         const char *image_name = _dyld_get_image_name(i);// name 是一串完整的文件路径，以 image 名结尾
-        if (strendswith(image_name, target_image_name)) {
+        NSString *imagePath = [NSString stringWithUTF8String:image_name];
+        if ([imagePath isEqualToString:executablePath]) {
             target_image_header = (headerType *)_dyld_get_image_header(i);
             break;
         }
@@ -202,4 +222,16 @@ int qmui_getProjectClassList(classref_t **classes) {
         getDataSection(getProjectImageHeader(), "__objc_classlist", &count);
     }
     return (int)count;
+}
+
+
+BOOL qmui_exists_dyld_image(const char *target_image_name) {
+    const uint32_t imageCount = _dyld_image_count();
+    for (uint32_t i = 0; i < imageCount; i++) {
+        const char *image_name = _dyld_get_image_name(i);
+        if (strendswith(image_name, target_image_name)) {
+            return true;
+        }
+    }
+    return false;
 }

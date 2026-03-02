@@ -1,6 +1,6 @@
 /**
  * Tencent is pleased to support the open source community by making QMUI_iOS available.
- * Copyright (C) 2016-2020 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2016-2021 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
@@ -58,8 +58,19 @@ extern const CGFloat QMUILineHeightIdentity;
  *  @warning 除上述情况外，计算的数值都可能不准确，会返回 0。
  *
  */
-
 @property(nonatomic, assign) CGFloat qmui_lineHeight;
+
+/**
+ 获取当前 font.capHeight 的中心点在 label.bounds.size.height 里的y值（代表字符的中心点位置），从而令业务在试图将文本垂直居中时可以基于该属性的返回值去计算。
+ @warning 仅对单行文本有意义，对 label 的高度没有要求，但 label 不应该调整过 baselineOffset
+ */
+@property(nonatomic, assign, readonly) CGFloat qmui_centerOfCapHeight;
+
+/**
+ 获取当前 font.xHeight 的中心点在 label.bounds.size.height 里的y值（代表x这种矮的字符的中心点位置），从而令业务在试图将文本垂直居中时可以基于该属性的返回值去计算。
+ @warning 仅对单行文本有意义，对 label 的高度没有要求，但 label 不应该调整过 baselineOffset
+ */
+@property(nonatomic, assign, readonly) CGFloat qmui_centerOfXHeight;
 
 /**
  * 将目标UILabel的样式属性设置到当前UILabel上
@@ -81,6 +92,21 @@ extern const CGFloat QMUILineHeightIdentity;
  */
 - (void)qmui_avoidBlendedLayersIfShowingChineseWithBackgroundColor:(UIColor *)color;
 
+@end
+
+@interface UILabel (QMUI_Debug)
+
+/**
+ 调试功能，打开后会在 label 第一行文字里把 descender、xHeight、capHeight、lineHeight 所在的位置以线条的形式标记出来。
+ 对这些属性的解释可以看这篇文章 https://www.rightpoint.com/rplabs/ios-tracking-typography
+ */
+@property(nonatomic, assign) BOOL qmui_showPrincipalLines;
+
+/**
+ 当打开 qmui_showPrincipalLines 时，通过这个属性控制线条的颜色，默认为 nil。
+ 当该属性为 nil 时，将会用 UIColorTestRed 作为线条的颜色。
+ */
+@property(nullable, nonatomic, strong) UIColor *qmui_principalLineColor;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -1,6 +1,6 @@
 {
   "name": "GGNetWorkManagerPublic",
-  "version": "0.1.10",
+  "version": "1.0.0",
   "summary": "iOS 网络管理器 GGNetWorkManager公有库",
   "description": "TODO: Add long description of the pod here.",
   "homepage": "https://github.com/github6022244/GGNetWorkManagerPublicPod",
@@ -13,18 +13,14 @@
   },
   "source": {
     "git": "https://github.com/github6022244/GGNetWorkManagerPublicPod.git",
-    "tag": "0.1.10"
+    "tag": "1.0.0"
   },
   "platforms": {
     "ios": "9.0"
   },
   "source_files": "GGNetWorkManagerPublic/Classes/**/*",
   "dependencies": {
-    "AFNetworking": [
-      "~> 4.0.1"
-    ],
-    "YTKNetwork": [
-      "~> 3.0.6"
-    ]
+    "GGAFNetworking": [],
+    "GGYTKNetwork": []
   }
 }
