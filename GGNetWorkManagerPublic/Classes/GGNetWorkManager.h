@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, readonly) NSDictionary *requestHeaders;// 请求 header (通过 configModel 配置)
 
-@property (nonatomic, strong, readonly) NSDictionary *commenParameters;// 请求公共参数 (通过 configModel 配置)
+@property (nonatomic, strong, readonly) NSDictionary *commonParameters;// 请求公共参数 (通过 configModel 配置)
 
 @property (nonatomic, strong, readonly) NSDictionary *filterCacheDirPath;// 请求缓存本地地址
 

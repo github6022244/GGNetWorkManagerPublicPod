@@ -21,7 +21,7 @@
 }
 
 // 返回公共参数
-- (NSDictionary *_Nullable)gg_configCommenParameters {
+- (NSDictionary *_Nullable)gg_configCommonParameters {
     return [self _configcommonParameterWithParam:nil];
 }
 

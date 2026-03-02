@@ -21,11 +21,9 @@
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+GGNetWork.h"
-#import "YTKNetworkAgent+dt_Agent.h"
 #import "YTKNetworkAgent+GGNetWork.h"
 #import "YTKRequest+GGNetWork.h"
-#import "MRCacheDirPathFilter.h"
-#import "MRUrlArgumentsFilter.h"
+#import "GGNetworkCacheDirPathFilter.h"
 #import "GGNetWorkManagerYTKRequestProtocol.h"
 
 FOUNDATION_EXPORT double GGNetWorkManagerPublicVersionNumber;

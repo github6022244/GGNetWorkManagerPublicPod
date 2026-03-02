@@ -6,14 +6,13 @@
 //
 
 #import "GGNetWorkManager.h"
-#import <GGYTKNetwork/YTKNetwork.h>
-#import "MRUrlArgumentsFilter.h"
-#import "MRCacheDirPathFilter.h"
+#import "GGNetWorkManagerDefine.h"
+#import <GGYTKNetwork/YTKNetworkConfig.h>
+#import <GGYTKNetwork/YTKRequest.h>
+#import "GGNetworkCacheDirPathFilter.h"
 #import "YTKChainRequest+AnimatingAccessory.h"
 #import "YTKBatchRequest+AnimatingAccessory.h"
 #import "YTKBaseRequest+AnimatingAccessory.h"
-
-#define GGNetWorkManagerDebugServerTypeUserDefaultsKey @"GGNetWorkManagerDebugServerTypeUserDefaultsKey"
 
 #define GGNetWorkManagerShareInstance [GGNetWorkManager share]
 
@@ -29,7 +28,7 @@
 
 @property (nonatomic, strong) NSDictionary *requestHeaders;// 请求 header (通过 configModel 配置)
 
-@property (nonatomic, strong) NSDictionary *commenParameters;// 请求公共参数 (通过 configModel 配置)
+@property (nonatomic, strong) NSDictionary *commonParameters;// 请求公共参数 (通过 configModel 配置)
 
 @property (nonatomic, strong) NSDictionary *filterCacheDirPath;// 请求缓存本地地址
 
@@ -45,12 +44,16 @@
 
 #pragma mark ------------------------- Cycle -------------------------
 + (instancetype)share {
-    static GGNetWorkManager *manager;
     static dispatch_once_t onceToken;
+    static GGNetWorkManager *instance = nil;
     dispatch_once(&onceToken, ^{
-        manager = [[GGNetWorkManager alloc] init];
+        instance = [[super allocWithZone:NULL] init];
     });
-    return manager;
+    return instance;
+}
+
++ (id)allocWithZone:(struct _NSZone *)zone {
+    return [self share];
 }
 
 #pragma mark ------------------------- Cofnig -------------------------
@@ -59,7 +62,7 @@
     
     self.requestHeaders = [self.configModel gg_configRequestHeaders];
     
-    self.commenParameters = [self.configModel gg_configCommenParameters];
+    self.commonParameters = [self.configModel gg_configCommonParameters];
     
     self.filterCacheDirPath = [self.configModel gg_configFilterCacheDirPath];
     
@@ -78,11 +81,10 @@
     [YTKNetworkConfig sharedConfig].baseUrl = GGNetWorkManagerShareInstance.currentServerURL;
     [YTKNetworkConfig sharedConfig].cdnUrl = GGNetWorkManagerShareInstance.currentCDNURL;
     [YTKNetworkConfig sharedConfig].debugLogEnabled = GGNetWorkManagerShareInstance.debugLogEnable;
-
-    MRUrlArgumentsFilter *urlFilter = [MRUrlArgumentsFilter filterWithArguments:self.commenParameters];
-    [[YTKNetworkConfig sharedConfig] addUrlFilter:urlFilter];
-    MRCacheDirPathFilter *cacheDirPathFilter = [[MRCacheDirPathFilter alloc] init];
+    
+    GGNetworkCacheDirPathFilter *cacheDirPathFilter = [[GGNetworkCacheDirPathFilter alloc] init];
     [[YTKNetworkConfig sharedConfig] addCacheDirPathFilter:cacheDirPathFilter];
+    
     /// 证书配置
     AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeNone];
    // 如果需要验证自建证书(无效证书)，需要设置为YES，默认为NO;
@@ -95,9 +97,7 @@
 #pragma mark ------------------------- Interface -------------------------
 // 初始化配置，传入自定义的 model
 + (void)setUpConfigModel:(id<GGNetWorkManagerConfigProtocol>)configModel {
-    if (GGNetWorkManagerShareInstance.debugLogEnable) {
-        GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
-    }
+    GGNetWorkLog(@"%@ 重新配置", NSStringFromClass([self class]));
     
     GGNetWorkManagerShareInstance.configModel = configModel;
     
