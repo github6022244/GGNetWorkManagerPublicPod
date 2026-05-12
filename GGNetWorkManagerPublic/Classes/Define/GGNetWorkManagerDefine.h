@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
+#import <GGAFNetworking/AFHTTPSessionManager.h>
 
 #pragma mark ------------------------- ENUM -------------------------
 // 指定的接口环境
@@ -90,10 +91,6 @@ GGNetWorkExchangeImplementationsInTwoClasses(Class _fromClass, SEL _originSelect
 
 
 #pragma mark ------------------------- Defines -------------------------
-/// GGNetWorkLog
-/// 依赖 GGNetWorkManager 所以在这里引入相关文件
-#import "GGNetWorkManager.h"
-
 #ifdef DEBUG
 #define GGNetWorkLog(...) \
     if ([GGNetWorkManager share].debugLogEnable) { \
