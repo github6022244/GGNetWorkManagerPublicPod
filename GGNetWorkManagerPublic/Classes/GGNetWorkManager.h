@@ -8,7 +8,6 @@
 #import <Foundation/Foundation.h>
 #import <GGAFNetworking/AFNetworking.h>
 #import "GGNetWorkManagerDefine.h"
-@protocol GGNetWorkManagerConfigProtocol;
 
 
 #pragma mark --- GGNetWorkManager

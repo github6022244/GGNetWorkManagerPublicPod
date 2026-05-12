@@ -11,8 +11,6 @@
 #import "GGNetWorkManager.h"
 #import "GGNetWorkHelper.h"
 #import "GGNetworkManagerDefine.h"
-#import "GGNetWorkManagerYTKRequestProtocol.h"
-#import "GGNetWorkManagerConfigProtocol.h"
 
 @implementation YTKNetworkAgent (GGNetWork)
 

@@ -109,3 +109,78 @@ _Pragma("clang diagnostic push") \
 _Pragma("clang diagnostic ignored \"-Wundeclared-selector\"")
 
 #define GGNetWorkPopClangDiagnosticWarnings _Pragma("clang diagnostic pop")
+
+
+
+
+
+
+
+
+#pragma mark ------------------------- Protocol -------------------------
+// 菊花效果协议
+@protocol GGNetWorkManagerLoadingProtocol <NSObject>
+
+/// 请求中的菊花效果
+/// @param text 例如：加载中。。。
+/// @param view 展示的view
+- (void)gg_configShowLoadingText:(NSString *_Nullable)text inView:(UIView *_Nonnull)view;
+
+- (void)gg_configHideLoading;
+
+@end
+
+
+#pragma mark --- 传入的配置对象需要实现的协议
+@protocol GGNetWorkManagerConfigProtocol <NSObject>
+
+@optional
+// 返回 requestHeaders
+- (NSDictionary *_Nullable)gg_configRequestHeaders;
+
+// 返回公共参数
+- (NSDictionary *_Nullable)gg_configCommonParameters;
+
+
+/// 返回请求缓存 path
+/// 格式:
+/// @{
+///   cdn path 或者 request path : 缓存地址，
+///}
+- (NSDictionary *_Nullable)gg_configFilterCacheDirPath;
+
+// 返回请求超时时间
+- (NSUInteger)gg_configTimeoutInterval;
+
+// 配置 AFHTTPSessionManager，内部已经做了常见的处理
+- (void)gg_configAFHTTPSessionManager:(AFHTTPSessionManager *_Nullable)manager;
+
+@required
+// 返回网络环境
+- (GGNetManagerServerType)gg_configNetServerType;
+
+// 配置请求域名
+- (NSString *_Nullable)gg_configURL_Test_Sever;
+
+- (NSString *_Nullable)gg_configURL_Develope_Sever;
+
+- (NSString *_Nonnull)gg_configURL_Public_Sever;
+
+// 配置H5相关域名
+- (NSString *_Nullable)gg_configURL_Develope_H5;
+
+- (NSString *_Nullable)gg_configURL_Test_H5;
+
+- (NSString *_Nonnull)gg_configURL_Public_H5;
+
+// 配置CDN域名
+- (NSString *_Nullable)gg_configURL_Develope_CDN;
+
+- (NSString *_Nullable)gg_configURL_Test_CDN;
+
+- (NSString *_Nonnull)gg_configURL_Public_CDN;
+
+// 获取一个菊花模型
+- (id<GGNetWorkManagerLoadingProtocol>_Nonnull)gg_getLoadingModel;
+
+@end

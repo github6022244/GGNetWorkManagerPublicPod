@@ -10,9 +10,7 @@
 #endif
 #endif
 
-#import "GGNetWorkManagerConfigProtocol.h"
 #import "GGNetWorkManagerDefine.h"
-#import "GGNetWorkManagerLoadingProtocol.h"
 #import "GGNetWork.h"
 #import "GGNetWorkManager.h"
 #import "GGNetWorkHelper.h"

@@ -9,8 +9,7 @@
 #import "YTKAnimatingRequestAccessory.h"
 #import "GGNetWorkManager.h"
 #import "GGNetWorkHelper.h"
-#import "GGNetWorkManagerConfigProtocol.h"
-#import "GGNetWorkManagerLoadingProtocol.h"
+#import "GGNetWorkManagerDefine.h"
 
 /// 默认的 parentView
 #define YTKAnimatingDefaultTipsParentView [GGNetWorkHelper getKeyWindow]
